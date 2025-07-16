@@ -29,7 +29,7 @@ class DataDownloader:
         self.LLM_model_name = LLM_model_name
         self.LLM_vendor_name = LLM_vendor_name
         self.embedding_model_name = embedding_model_name
-        self.cutoff_score=0.5
+        self.cutoff_score=0.5 # cutoff score for similarity scores
 
         self.instr_filename=Path("src/lib/LLM/LLM_instr_files/semantically_similar_queries_instr.txt")
         self.api_key_string="OPENAI_API_KEY" 
@@ -301,32 +301,29 @@ class DataDownloader:
         else:
             print(f"Number of papers to download is less than the user-set download limit. Downloading {len(filtered_indices)} papers.")
 
-
-        filtered_papers_metadata=[]
-        for index in filtered_indices:
-            filtered_papers_metadata.append(all_papers_metadata[index])
-
-        # Download PDFs for filtered papers
-        print(f"\nDownloading PDFs for {len(filtered_papers_metadata)} filtered papers...")
+        # Download PDFs for filtered papers and create metadata list in one loop
+        print(f"\nDownloading PDFs for {len(filtered_indices)} filtered papers...")
         successful_downloads = 0
+        filtered_papers_metadata = []
         
-
-        
-        for idx, paper in enumerate(filtered_papers_metadata, start=1):
+        for idx, index in enumerate(filtered_indices, start=1):
+            paper = all_papers_metadata[index]
+            
+            # Download PDF
             if self.download_pdf_for_paper(paper, self.downloads_dir, idx):
                 successful_downloads += 1
-                
-            # Limit downloads to num_docs_download
-            #if successful_downloads >= self.num_docs_download:
-            #    print(f"Reached download limit of {self.num_docs_download} papers")
-            #    break
+                # Add filename to paper metadata
+                paper['filename'] = f"paper_{idx}.pdf"
+            
+            # Add paper to filtered metadata (regardless of download success)
+            filtered_papers_metadata.append(paper)
         
         print(f"Successfully downloaded {successful_downloads} PDFs to {self.downloads_dir}")
 
         # Save metadata to CSV
         with open(self.metadata_file, mode='w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["Index", "Title", "Abstract", "DOI", "ArXiv Link", "Authors", "Published Date"])
+            writer.writerow(["Index", "Title", "Abstract", "DOI", "ArXiv Link", "Authors", "Published Date", "Filename"])
             for paper in filtered_papers_metadata:
                 writer.writerow([
                     paper['index'],
@@ -335,7 +332,8 @@ class DataDownloader:
                     paper['doi'],
                     paper['arxiv_link'],
                     ', '.join(paper['authors']),
-                    paper['published_date']
+                    paper['published_date'],
+                    paper.get('filename', 'N/A')  # Use get() to handle cases where download failed
                 ])
 
         print(f"\nMetadata saved to {self.metadata_file}")
