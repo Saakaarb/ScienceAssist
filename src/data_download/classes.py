@@ -20,7 +20,7 @@ import shutil
 
 
 class DataDownloader:
-    def __init__(self, downloads_dir, num_docs_check,num_docs_download, metadata_filename,LLM_model_name="gpt-4.1",LLM_vendor_name="openai",embedding_model_name="all-MiniLM-L6-v2"):
+    def __init__(self, downloads_dir, num_docs_check,num_docs_download, metadata_filename,API_key_string=None,LLM_model_name="gpt-4.1",LLM_vendor_name="openai",embedding_model_name="all-MiniLM-L6-v2"):
         
         self.downloads_dir = downloads_dir
         self.num_docs_check = num_docs_check
@@ -32,7 +32,10 @@ class DataDownloader:
         self.cutoff_score=0.5 # cutoff score for similarity scores
 
         self.instr_filename=Path("src/lib/LLM/LLM_instr_files/semantically_similar_queries_instr.txt")
-        self.api_key_string="OPENAI_API_KEY" 
+        if API_key_string is None:
+            raise ValueError("API key string is required")
+        
+        self.api_key_string=API_key_string
         self.reference_file_paths=[]
 
     def fetch_arxiv_metadata(self,query, num_docs_check):

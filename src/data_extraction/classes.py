@@ -20,13 +20,16 @@ import time
 # the csv file contains the following columns:
 
 class DataExtractor:
-    def __init__(self,processed_data_location,processed_dataset_name,raw_dataset_name,raw_dataset_location):
+    def __init__(self,processed_data_location,processed_dataset_name,raw_dataset_name,raw_dataset_location,max_characters,new_after_n_chars):
         self.processed_data_location=processed_data_location
         self.processed_dataset_name=processed_dataset_name
         self.raw_dataset_name=raw_dataset_name
         self.raw_dataset_location=raw_dataset_location
         self.timeout_seconds=180
-
+        self.max_characters=max_characters
+        self.new_after_n_chars=new_after_n_chars
+        self.min_characters=100
+        
     def fetch_raw_dataset(self):
 
         raw_metadata_filepath=self.raw_dataset_location/Path("metadata.csv")
@@ -164,7 +167,7 @@ class DataExtractor:
             #TODO parallelize across CPUs
             # chunk elements
             
-            chunks = chunk_by_title(elements)
+            chunks = chunk_by_title(elements,max_characters=self.max_characters,new_after_n_chars=self.new_after_n_chars)
 
             # for every chunk, clean and store text along with extra metadata  
 
@@ -174,6 +177,9 @@ class DataExtractor:
                 chunk_data={} # reinit chunk data
                 # regex based cleaning
                 clean_chunk=self.clean_text(chunk.text)
+
+                if len(clean_chunk)<self.min_characters:
+                    continue
 
                 page_nos = [e.metadata.page_number for e in chunk.metadata.orig_elements]
 

@@ -22,6 +22,8 @@ class LLMBase():
         
         print("Note: Set the env key as an environment variable")
         self.API_key=os.getenv(API_key_string)
+        if not self.API_key:
+            raise ValueError(f"API key not found in environment variable {API_key_string}") 
 
     def init_client(self):
 
