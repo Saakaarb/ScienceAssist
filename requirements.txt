@@ -1,0 +1,13 @@
+datasets
+faiss_cpu
+feedparser
+numpy
+openai
+pandas
+python-dotenv
+PyYAML
+Requests
+sentence_transformers
+tqdm
+unstructured[all-docs]==0.15.14
+pdfminer.six==20231228

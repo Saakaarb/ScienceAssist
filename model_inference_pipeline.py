@@ -5,6 +5,7 @@ import mlflow
 import logging
 import argparse
 import os
+from dotenv import load_dotenv
 
 def setup_logging(config):
     """Setup logging based on configuration."""
@@ -119,11 +120,8 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
                 print(reply)
                 print("="*60)
                 
-                # Ask if user wants to continue
-                continue_choice = input("\n❓ Ask another question? (y/n): ").strip().lower()
-                if continue_choice not in ['y', 'yes', '']:
-                    print("\n👋 Thank you for using ScienceAssist! Goodbye!")
-                    break
+                # Automatically continue to next question
+                print("\n💡 Ask your next question or type 'quit', 'exit', or 'q' to end the session.")
                     
         except KeyboardInterrupt:
             print("\n\n👋 Session interrupted. Goodbye!")
@@ -138,7 +136,7 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_arguments()
-    
+    load_dotenv()
     # Load configurations
     config = load_pipeline_config('model_inference')
     main_config = load_pipeline_config('main')

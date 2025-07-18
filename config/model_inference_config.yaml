@@ -30,7 +30,7 @@ rag:
 # MLflow tracking parameters
 mlflow:
   experiment_name: "science_assist_inference"
-  tracking_uri: "http://localhost:5000"
+  tracking_uri: "file:./mlruns"
   log_artifacts: true
   log_metrics:
     - "response_time"

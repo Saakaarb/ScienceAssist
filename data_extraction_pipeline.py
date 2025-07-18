@@ -70,14 +70,14 @@ if __name__ == "__main__":
     if not os.path.isdir(data_dir):
         raise ValueError(f"Data directory {data_dir} does not exist and must exist to proceed. Did you download the dataset using the data_download_pipeline?")
 
-    exp_name = args.exp_name
-    processed_dataset_name = args.processed_dataset_name
-    raw_dataset_name = args.raw_dataset_name
+    exp_name = str(args.exp_name)
+    processed_dataset_name = str(args.processed_dataset_name)
+    raw_dataset_name = str(args.raw_dataset_name)
     # Paths based on experiment name
     raw_data_dirname = Path(get_config_value(config, 'paths.raw_dataset_location', 'raw_data'))
     processed_data_dirname = Path(get_config_value(config, 'paths.processed_data_location', 'processed_data'))
 
-    raw_data_path_for_exp = raw_data_dirname /Path(raw_dataset_name)
+    raw_data_path_for_exp = data_dir / Path(exp_name) / raw_data_dirname /Path(raw_dataset_name)
 
     # Construct full paths and check if they exist
     #------------------------------------------------
@@ -93,7 +93,8 @@ if __name__ == "__main__":
     if os.path.isdir(processed_dataset_path_for_exp):
         raise ValueError(f"Processed dataset path {processed_dataset_path_for_exp} already exists and is not going to be overwritten. Please ensure you want to overwrite it and delete it to proceed.")
  
-    
+    else:
+        os.mkdir(processed_dataset_path_for_exp)
     # Text processing parameters
     max_characters = get_config_value(config, 'text_processing.max_characters', 500)
     new_after_n_chars = get_config_value(config, 'text_processing.new_after_n_chars', 400)
@@ -117,8 +118,8 @@ if __name__ == "__main__":
             'new_after_n_chars': new_after_n_chars,
             'min_characters': min_characters,
             'timeout_seconds': timeout_seconds,
-            'raw_data_path': str(raw_data_path_for_exp),
-            'processed_data_path': str(processed_dataset_path_for_exp)
+            'raw_dataset_name': str(raw_dataset_name),
+            'processed_dataset_name': str(processed_dataset_name)
         })
         
         try:
@@ -141,16 +142,16 @@ if __name__ == "__main__":
             # Log metrics (you'll need to modify DataExtractor to return metrics)
             # For now, we'll log basic file existence metrics
             metadata_file = raw_data_path_for_exp / "metadata.csv"
-            if metadata_file.exists():
-                mlflow.log_metric("metadata_file_exists", 1.0)
-            else:
-                mlflow.log_metric("metadata_file_exists", 0.0)
+            #if metadata_file.exists():
+            #    mlflow.log_metric("metadata_file_exists", 1.0)
+            #else:
+            #    mlflow.log_metric("metadata_file_exists", 0.0)
        
             
             # Log artifacts
-            if get_config_value(config, 'mlflow.log_artifacts', True):
-                if metadata_file.exists():
-                    mlflow.log_artifact(str(metadata_file))
+            #if get_config_value(config, 'mlflow.log_artifacts', True):
+            #    if metadata_file.exists():
+            #        mlflow.log_artifact(str(metadata_file))
                 
             
             logger.info("Data extraction pipeline completed successfully")

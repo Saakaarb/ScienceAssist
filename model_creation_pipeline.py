@@ -83,12 +83,17 @@ if __name__ == "__main__":
         raise ValueError(f"Processed data path {processed_data_path_for_exp} does not exist and must exist to proceed. Did you run the data_extraction_pipeline?")
     model_output_path_for_exp = models_dir / Path(exp_name) / Path(model_name)
     
+    if not os.path.isdir(models_dir):
+        os.mkdir(models_dir)
     if not os.path.isdir(models_dir/Path(exp_name)):
         os.mkdir(models_dir/Path(exp_name))
+    
 
     if os.path.isdir(model_output_path_for_exp):
         raise ValueError(f"Model output path {model_output_path_for_exp} already exists and is not going to be overwritten. Please ensure you want to overwrite it and delete it to proceed.")
     
+    else:
+        os.mkdir(model_output_path_for_exp)
     # Model configuration parameters
     embedding_model_name = get_config_value(config, 'model.embedding_model_name', 'sentence-transformers/multi-qa-MiniLM-L6-dot-v1')
     fine_tune_model = get_config_value(config, 'model.fine_tune_model', False)
@@ -119,8 +124,8 @@ if __name__ == "__main__":
             'index_type': index_type,
             'normalize_embeddings': normalize_embeddings,
             'use_gpu': use_gpu,
-            'processed_dataset_path': str(processed_data_path_for_exp),
-            'model_output_path': str(model_output_path_for_exp)
+            'processed_dataset_name': str(processed_dataset_name),
+            'model_name': str(model_name)
         })
         
         try:
@@ -136,6 +141,7 @@ if __name__ == "__main__":
             
             # Log metrics (you'll need to modify ModelCreator to return metrics)
             # For now, we'll log basic file existence metrics
+            '''
             if embedding_model_path.exists():
                 mlflow.log_metric("embedding_model_created", 1.0)
             else:
@@ -154,7 +160,8 @@ if __name__ == "__main__":
                     mlflow.log_artifact(str(faiss_index_path))
             
             logger.info("Model creation pipeline completed successfully")
-            
+            '''
+
         except Exception as e:
             logger.error(f"Error in model creation pipeline: {e}")
             mlflow.log_metric("model_creation_success", 0.0)

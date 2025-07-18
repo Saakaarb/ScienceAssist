@@ -26,7 +26,7 @@ cleaning:
 # MLflow tracking parameters
 mlflow:
   experiment_name: "science_assist_data_extraction"
-  tracking_uri: "http://localhost:5000"
+  tracking_uri: "file:./mlruns"
   log_artifacts: true
   log_metrics:
     - "total_pdfs_processed"

@@ -9,6 +9,8 @@ import argparse
 import os
 def setup_logging(config):
     """Setup logging based on configuration."""
+    if not os.path.isdir(Path(get_config_value(config, 'paths.logs_dir', 'logs'))):
+        os.mkdir(Path(get_config_value(config, 'paths.logs_dir', 'logs')))
     log_config = get_config_value(config, 'logging', {})
     logging.basicConfig(
         level=getattr(logging, log_config.get('level', 'INFO')),
@@ -59,6 +61,9 @@ if __name__ == "__main__":
     # Parse command line arguments
     args = parse_arguments()
     
+# Load environment variables
+    load_dotenv()
+
     # Load configuration
     config = load_pipeline_config('data_download')
     
@@ -72,13 +77,16 @@ if __name__ == "__main__":
     setup_logging(config)
     logger = logging.getLogger(__name__)
     
-    # Load environment variables
-    load_dotenv()
+    
     
     # Extract parameters from config
-    user_query = args.user_query  # Use command line argument instead of config
-    exp_name = args.exp_name
-    raw_dataset_name = args.raw_dataset_name
+    user_query = str(args.user_query)  # Use command line argument instead of config
+    exp_name = str(args.exp_name)
+    raw_dataset_name = str(args.raw_dataset_name)
+
+    print(f"User query: {user_query}")
+    print(f"Experiment name: {exp_name}")
+    print(f"Raw dataset name: {raw_dataset_name}")
 
     if not os.path.isdir(data_dir /Path(exp_name)):
         os.mkdir(data_dir /Path(exp_name))
@@ -98,6 +106,9 @@ if __name__ == "__main__":
 
     if os.path.isdir(raw_data_path_for_exp):
         raise ValueError(f"Raw data path {raw_data_path_for_exp} already exists and is not going to be overwritten. Please ensure you want to overwrite it and delete it to proceed.")
+
+    else:   
+        os.mkdir(raw_data_path_for_exp)
 
     metadata_path = raw_data_path_for_exp /metadata_filename
 
@@ -125,7 +136,8 @@ if __name__ == "__main__":
             'num_docs_download': num_docs_download,
             'LLM_model_name': LLM_model_name,
             'embedding_model_name': embedding_model_name,
-            'cutoff_score': cutoff_score
+            'cutoff_score': cutoff_score,
+            'raw_dataset_name': raw_dataset_name
         })
         
         try:
@@ -137,11 +149,11 @@ if __name__ == "__main__":
                 metadata_filename=metadata_path,
                 LLM_model_name=LLM_model_name,
                 LLM_vendor_name=LLM_vendor_name,
-                embedding_model_name=embedding_model_name
+                embedding_model_name=embedding_model_name,
+                API_key_string=API_key_string,
+                cutoff_score=cutoff_score
             )
             
-            # Set cutoff score
-            datadownloader.cutoff_score = cutoff_score
             
             # Download data
             result = datadownloader.download_pdf_data(user_query)
@@ -151,8 +163,8 @@ if __name__ == "__main__":
             mlflow.log_metric("download_success_rate", 1.0 if result else 0.0)
             
             # Log artifacts
-            if get_config_value(config, 'mlflow.log_artifacts', True):
-                mlflow.log_artifact(metadata_filename)
+            #if get_config_value(config, 'mlflow.log_artifacts', True):
+            #    mlflow.log_artifact(metadata_filename)
             
             logger.info("Data download pipeline completed successfully")
             

@@ -26,7 +26,7 @@ api:
 # MLflow tracking parameters
 mlflow:
   experiment_name: "science_assist_data_download"
-  tracking_uri: "http://localhost:5000"
+  tracking_uri: "file:./mlruns"
   log_artifacts: true
   log_metrics:
     - "papers_found"

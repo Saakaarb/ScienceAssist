@@ -12,7 +12,7 @@ from datasets import load_from_disk
 import shutil
 import signal
 import time
-from src.lib.utils.config_utils import get_config_value
+from src.utils.config_loader import get_config_value
 # This class is used to extract the data from the downloaded data directory.
 # it extracts chunks from PDFs and combines them with metadata to create a dataset.
 # the dataset is saved in the processed_data directory.
@@ -194,4 +194,4 @@ class DataExtractor:
         print(all_chunk_data[6])
         print("Total number of chunks extracted: ",len(all_chunk_data))
         dataset = Dataset.from_list(all_chunk_data)
-        dataset.save_to_disk()
+        dataset.save_to_disk(self.processed_data_location)

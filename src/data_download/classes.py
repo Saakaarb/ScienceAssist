@@ -20,7 +20,7 @@ import shutil
 
 
 class DataDownloader:
-    def __init__(self, downloads_dir, num_docs_check,num_docs_download, metadata_filename,API_key_string=None,LLM_model_name="gpt-4.1",LLM_vendor_name="openai",embedding_model_name="all-MiniLM-L6-v2"):
+    def __init__(self, downloads_dir, num_docs_check,num_docs_download, metadata_filename,API_key_string=None,LLM_model_name="gpt-4.1",LLM_vendor_name="openai",embedding_model_name="all-MiniLM-L6-v2",cutoff_score=0.5):
         
         self.downloads_dir = downloads_dir
         self.num_docs_check = num_docs_check
@@ -29,7 +29,7 @@ class DataDownloader:
         self.LLM_model_name = LLM_model_name
         self.LLM_vendor_name = LLM_vendor_name
         self.embedding_model_name = embedding_model_name
-        self.cutoff_score=0.5 # cutoff score for similarity scores
+        self.cutoff_score=cutoff_score # cutoff score for similarity scores
 
         self.instr_filename=Path("src/lib/LLM/LLM_instr_files/semantically_similar_queries_instr.txt")
         if API_key_string is None:

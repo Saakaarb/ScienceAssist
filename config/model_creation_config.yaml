@@ -39,7 +39,7 @@ training:
 # MLflow tracking parameters
 mlflow:
   experiment_name: "science_assist_model_creation"
-  tracking_uri: "http://localhost:5000"
+  tracking_uri: "file:./mlruns"
   log_artifacts: true
   log_metrics:
     - "embedding_dimension"
