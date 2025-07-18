@@ -7,27 +7,13 @@ import mlflow
 import logging
 import argparse
 import os
-def setup_logging(config):
-    """Setup logging based on configuration."""
-    if not os.path.isdir(Path(get_config_value(config, 'paths.logs_dir', 'logs'))):
-        os.mkdir(Path(get_config_value(config, 'paths.logs_dir', 'logs')))
-    log_config = get_config_value(config, 'logging', {})
-    logging.basicConfig(
-        level=getattr(logging, log_config.get('level', 'INFO')),
-        format=log_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
-        handlers=[
-            logging.FileHandler(log_config.get('file', 'logs/data_download.log')),
-            logging.StreamHandler()
-        ]
-    )
+from src.utils.logging_functions import setup_logging
+from src.utils.mlflow_functions import setup_mlflow
 
-def setup_mlflow(config, exp_name):
-    """Setup MLflow tracking based on configuration."""
-    mlflow_config = get_config_value(config, 'mlflow', {})
-    mlflow.set_tracking_uri(mlflow_config.get('tracking_uri', 'sqlite:///mlflow.db'))
-    mlflow.set_experiment(exp_name)
 
-def parse_arguments():
+
+
+def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description='ScienceAssist Data Download Pipeline',
@@ -74,7 +60,7 @@ if __name__ == "__main__":
         os.mkdir(data_dir)
 
     # Setup logging
-    setup_logging(config)
+    setup_logging(config,pipeline_name='data_download')
     logger = logging.getLogger(__name__)
     
     

@@ -6,26 +6,11 @@ import logging
 import argparse
 import os
 from dotenv import load_dotenv
+from src.utils.logging_functions import setup_logging
+from src.utils.mlflow_functions import setup_mlflow
 
-def setup_logging(config):
-    """Setup logging based on configuration."""
-    log_config = get_config_value(config, 'logging', {})
-    logging.basicConfig(
-        level=getattr(logging, log_config.get('level', 'INFO')),
-        format=log_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
-        handlers=[
-            logging.FileHandler(log_config.get('file', 'logs/model_inference.log')),
-            logging.StreamHandler()
-        ]
-    )
 
-def setup_mlflow(config, exp_name):
-    """Setup MLflow tracking based on configuration."""
-    mlflow_config = get_config_value(config, 'mlflow', {})
-    mlflow.set_tracking_uri(mlflow_config.get('tracking_uri', 'http://localhost:5000'))
-    mlflow.set_experiment(exp_name)
-
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description='ScienceAssist Model Inference Pipeline - Interactive Q&A',
@@ -142,7 +127,7 @@ if __name__ == "__main__":
     main_config = load_pipeline_config('main')
     
     # Setup logging
-    setup_logging(config)
+    setup_logging(config,pipeline_name='model_inference')
     logger = logging.getLogger(__name__)
     
     # Get base directories from main config
