@@ -277,10 +277,6 @@ class DataDownloader:
 
         
         """
-        # Create downloads directory if it doesn't exist
-        if os.path.isdir(self.downloads_dir):
-            shutil.rmtree(self.downloads_dir)
-        os.makedirs(self.downloads_dir, exist_ok=True)
         
         # generate semantically similar queries to the user query
         semantically_similar_queries=self.generate_semantically_similar_queries(user_query)

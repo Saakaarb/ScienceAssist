@@ -12,7 +12,7 @@ from datasets import load_from_disk
 import shutil
 import signal
 import time
-
+from src.lib.utils.config_utils import get_config_value
 # This class is used to extract the data from the downloaded data directory.
 # it extracts chunks from PDFs and combines them with metadata to create a dataset.
 # the dataset is saved in the processed_data directory.
@@ -20,15 +20,14 @@ import time
 # the csv file contains the following columns:
 
 class DataExtractor:
-    def __init__(self,processed_data_location,processed_dataset_name,raw_dataset_name,raw_dataset_location,max_characters,new_after_n_chars):
+    def __init__(self,processed_data_location,raw_dataset_location,max_characters,new_after_n_chars,config):
         self.processed_data_location=processed_data_location
-        self.processed_dataset_name=processed_dataset_name
-        self.raw_dataset_name=raw_dataset_name
         self.raw_dataset_location=raw_dataset_location
-        self.timeout_seconds=180
         self.max_characters=max_characters
         self.new_after_n_chars=new_after_n_chars
-        self.min_characters=100
+        self.config=config
+        self.min_characters=get_config_value(self.config, 'text_processing.min_characters', 100)
+        self.timeout_seconds=get_config_value(self.config, 'text_processing.timeout_seconds', 180)
         
     def fetch_raw_dataset(self):
 
@@ -138,10 +137,6 @@ class DataExtractor:
     # extract data into chunks and store in a Dataset object
     def extract_and_save_data(self):
 
-        if os.path.isdir(self.processed_data_location):
-            shutil.rmtree(self.processed_data_location)
-        os.makedirs(self.processed_data_location, exist_ok=True)
-
         raw_metadata_df,pdf_file_names=self.fetch_raw_dataset()
 
         all_chunk_data=[]
@@ -199,4 +194,4 @@ class DataExtractor:
         print(all_chunk_data[6])
         print("Total number of chunks extracted: ",len(all_chunk_data))
         dataset = Dataset.from_list(all_chunk_data)
-        dataset.save_to_disk(self.processed_data_location/self.processed_dataset_name)
+        dataset.save_to_disk()

@@ -1,0 +1,42 @@
+# Data Download Pipeline Configuration
+# This config file contains parameters for downloading research papers from arXiv
+
+pipeline:
+  name: "data_download_pipeline"
+  version: "1.0.0"
+  description: "Downloads research papers from arXiv based on user queries"
+
+# User query and search parameters
+query:
+  num_docs_check: 100  # Number of papers to check for each query
+  num_docs_download: 100  # Maximum number of papers to download
+
+
+# Model parameters for similarity filtering
+model:
+  LLM_model_name: "gpt-4.1"
+  LLM_vendor_name: "openai"
+  embedding_model_name: "all-MiniLM-L6-v2"
+  cutoff_score: 0.5  # Similarity threshold for filtering papers
+
+# API configuration
+api:
+  API_key_string: "OPENAI_API_KEY"  # Environment variable name
+
+# MLflow tracking parameters
+mlflow:
+  experiment_name: "science_assist_data_download"
+  tracking_uri: "http://localhost:5000"
+  log_artifacts: true
+  log_metrics:
+    - "papers_found"
+    - "papers_downloaded"
+    - "download_success_rate"
+
+
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/data_download.log" 

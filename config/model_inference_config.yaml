@@ -1,0 +1,82 @@
+# Model Inference Pipeline Configuration
+# This config file contains parameters for RAG-based question answering
+
+pipeline:
+  name: "model_inference_pipeline"
+  version: "1.0.0"
+  description: "RAG-based question answering using trained models"
+
+# LLM configuration
+llm:
+  LLM_vendor_name: "openai"
+  LLM_model_name: "gpt-4.1"
+  API_key_string: "OPENAI_API_KEY"  # Environment variable name
+  temperature: 0.1  # Low temperature for more focused responses
+  max_tokens: 1000  # Maximum response length
+
+# Retrieval parameters
+retrieval:
+  num_docs_to_retrieve: 5  # Number of documents to retrieve (k parameter)
+  similarity_threshold: 0.5  # Minimum similarity score for retrieval
+  rerank_results: false  # Whether to rerank retrieved results
+
+# RAG system parameters
+rag:
+  use_hybrid_search: false  # Combine dense and sparse retrieval
+  use_reranking: false  # Use a reranker model
+  max_context_length: 4000  # Maximum context length for LLM
+  include_metadata: true  # Include paper metadata in context
+
+# MLflow tracking parameters
+mlflow:
+  experiment_name: "science_assist_inference"
+  tracking_uri: "http://localhost:5000"
+  log_artifacts: true
+  log_metrics:
+    - "response_time"
+    - "retrieval_time"
+    - "llm_generation_time"
+    - "context_length"
+    - "num_docs_retrieved"
+    - "similarity_scores"
+  log_parameters:
+    - "num_docs_to_retrieve"
+    - "LLM_model_name"
+    - "temperature"
+
+
+
+# Evaluation parameters
+evaluation:
+  test_questions:
+    - "What are some current limitations of topology optimization?"
+    - "How does topology optimization improve heat transfer?"
+    - "What are the main challenges in implementing topology optimization?"
+  metrics:
+    - "response_relevance"
+    - "citation_accuracy"
+    - "response_completeness"
+    - "hallucination_detection"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/model_inference.log"
+  log_queries: true  # Log all user queries
+  log_responses: true  # Log all responses
+
+# Performance settings
+performance:
+  use_gpu: false
+  batch_retrieval: false
+  cache_embeddings: true
+  max_concurrent_requests: 10
+
+# Output configuration
+output:
+  save_responses: true
+  response_file: "outputs/responses.json"
+  include_citations: true
+  include_similarity_scores: false
+  format: "markdown"  # Response format: markdown, plain_text, json 

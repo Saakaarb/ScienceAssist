@@ -1,0 +1,82 @@
+# Main Configuration File for ScienceAssist Pipeline
+# This file orchestrates all pipeline components and provides global settings
+
+project:
+  name: "ScienceAssist"
+  version: "1.0.0"
+  description: "LLM-based tool to accelerate research on technical topics using arXiv papers"
+  author: "Saakaar Bhatnagar"
+
+# Pipeline execution order
+pipeline_order:
+  - "data_download"
+  - "data_extraction"
+  - "model_creation"
+  - "model_inference"
+
+# Global paths
+paths:
+  base_dir: "."
+  config_dir: "config"
+  logs_dir: "logs"
+  data_dir: "data"
+  models_dir: "models"
+  temp_dir: "temp"
+
+
+
+# Environment configuration
+environment:
+  python_version: "3.10"
+  requirements_file: "requirements.txt"
+  env_file: ".env"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    - type: "file"
+      filename: "logs/science_assist.log"
+      level: "INFO"
+    - type: "console"
+      level: "INFO"
+
+# Pipeline-specific configurations
+pipelines:
+  data_download:
+    config_file: "config/data_download_config.yaml"
+    enabled: true
+    retry_on_failure: false
+    max_retries: 3
+    
+  data_extraction:
+    config_file: "config/data_extraction_config.yaml"
+    enabled: true
+    retry_on_failure: false
+    max_retries: 3
+    
+  model_creation:
+    config_file: "config/model_creation_config.yaml"
+    enabled: true
+    retry_on_failure: false
+    max_retries: 1
+    
+  model_inference:
+    config_file: "config/model_inference_config.yaml"
+    enabled: true
+    retry_on_failure: false
+    max_retries: 3
+
+# Validation rules
+validation:
+  check_data_quality: true
+  validate_model_outputs: true
+  check_file_integrity: true
+  
+  # Data quality thresholds
+  data_quality:
+    min_papers_downloaded: 10
+    min_chunks_per_paper: 5
+    max_empty_chunks_ratio: 0.1
+    min_embedding_quality: 0.7

@@ -1,0 +1,76 @@
+# Model Creation Pipeline Configuration
+# This config file contains parameters for creating embedding models and vector databases
+
+pipeline:
+  name: "model_creation_pipeline"
+  version: "1.0.0"
+  description: "Creates embedding models and vector databases for RAG system"
+
+# Input data paths
+paths:
+  processed_data_location: "processed_data"
+  processed_dataset_name: "topology_optimization_dataset"
+  model_output_folder: "model"
+  model_name: "topology_optimization_chatmodel"
+
+# Model configuration
+model:
+  embedding_model_name: "sentence-transformers/multi-qa-MiniLM-L6-dot-v1"
+  fine_tune_model: false  # Whether to fine-tune the embedding model
+  embedding_model_path: "model/embedding_model/"
+  faiss_index_path: "model/faiss_index.idx"
+
+# Vector database parameters
+vector_db:
+  index_type: "IndexFlatL2"  # FAISS index type
+  normalize_embeddings: true
+  use_gpu: false  # Use GPU for FAISS if available
+
+# Training parameters (if fine-tuning)
+training:
+  batch_size: 32
+  learning_rate: 2e-5
+  num_epochs: 3
+  warmup_steps: 100
+  max_seq_length: 512
+  train_split: 0.8
+  validation_split: 0.2
+
+# MLflow tracking parameters
+mlflow:
+  experiment_name: "science_assist_model_creation"
+  tracking_uri: "http://localhost:5000"
+  log_artifacts: true
+  log_metrics:
+    - "embedding_dimension"
+    - "total_embeddings"
+    - "index_size"
+    - "creation_time"
+    - "model_size_mb"
+  log_parameters:
+    - "embedding_model_name"
+    - "index_type"
+    - "batch_size"
+
+
+
+# Model evaluation parameters
+evaluation:
+  test_queries:
+    - "What is topology optimization?"
+    - "How does heat transfer work?"
+    - "What are the limitations of current methods?"
+  top_k: 5  # Number of top results to retrieve
+  similarity_threshold: 0.5
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/model_creation.log"
+
+# Performance settings
+performance:
+  use_gpu: false
+  num_threads: 4
+  batch_size_inference: 64 

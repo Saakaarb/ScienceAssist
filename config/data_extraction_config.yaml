@@ -1,0 +1,49 @@
+# Data Extraction Pipeline Configuration
+# This config file contains parameters for extracting and processing PDF data
+
+pipeline:
+  name: "data_extraction_pipeline"
+  version: "1.0.0"
+  description: "Extracts text chunks from PDFs and creates processed datasets"
+
+
+# Text processing parameters
+text_processing:
+  max_characters: 5000  # Maximum characters per chunk
+  new_after_n_chars: 4000  # Start new chunk after this many characters
+  min_characters: 100  # Minimum characters for a valid chunk
+  timeout_seconds: 180  # Timeout for PDF processing
+
+# Text cleaning parameters
+cleaning:
+  remove_math: true  # Remove LaTeX math expressions
+  remove_brackets: true  # Remove content in brackets
+  remove_figures: true  # Remove figure/table captions
+  remove_references: true  # Remove references section
+  convert_to_lowercase: true  # Convert text to lowercase
+  remove_non_ascii: true  # Remove non-ASCII characters
+
+# MLflow tracking parameters
+mlflow:
+  experiment_name: "science_assist_data_extraction"
+  tracking_uri: "http://localhost:5000"
+  log_artifacts: true
+  log_metrics:
+    - "total_pdfs_processed"
+    - "total_chunks_extracted"
+    - "processing_time_per_pdf"
+    - "chunks_per_pdf"
+    - "failed_pdfs"
+
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/data_extraction.log"
+
+# Performance settings
+performance:
+  parallel_processing: false  # Enable parallel PDF processing
+  max_workers: 4  # Number of parallel workers
+  chunk_size: 1000  # Process chunks in batches 

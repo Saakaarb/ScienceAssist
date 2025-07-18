@@ -7,18 +7,16 @@ import shutil
 import os
 
 class ModelCreator: 
-    def __init__(self,processed_data_location,processed_dataset_name,model_output_folder,model_name,embedding_model_name):
+    def __init__(self,processed_data_location,model_output_folder,embedding_model_name):
         self.processed_data_location=processed_data_location
-        self.processed_dataset_name=processed_dataset_name
         self.model_output_folder=model_output_folder
-        self.model_name=model_name
         self.embedding_model_name=embedding_model_name
         self.faiss_index_path=model_output_folder/Path("faiss_index.idx")
         self.embedding_model_path=model_output_folder/Path("embedding_model")
         
 
     def load_dataset(self):
-        dataset = load_from_disk(self.processed_data_location/self.processed_dataset_name)
+        dataset = load_from_disk(self.processed_data_location)
         return dataset
 
     def get_texts_from_dataset(self,dataset):
@@ -28,9 +26,6 @@ class ModelCreator:
         return all_text
 
     def create_model(self):
-        if os.path.isdir(self.model_output_folder):
-            shutil.rmtree(self.model_output_folder)
-        os.makedirs(self.model_output_folder, exist_ok=True)
 
         print("Loading dataset...")
         dataset=self.load_dataset()
