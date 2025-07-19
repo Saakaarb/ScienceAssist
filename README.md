@@ -40,7 +40,7 @@ ScienceAssist consists of four main pipeline components:
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone git@github.com:Saakaarb/ScienceAssist.git
    cd ScienceAssist
    ```
 
