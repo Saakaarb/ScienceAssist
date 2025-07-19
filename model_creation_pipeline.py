@@ -124,28 +124,8 @@ if __name__ == "__main__":
             # Create model
             model_creator.create_model()
             
-            # Log metrics (you'll need to modify ModelCreator to return metrics)
-            # For now, we'll log basic file existence metrics
-            '''
-            if embedding_model_path.exists():
-                mlflow.log_metric("embedding_model_created", 1.0)
-            else:
-                mlflow.log_metric("embedding_model_created", 0.0)
-            
-            if faiss_index_path.exists():
-                mlflow.log_metric("faiss_index_created", 1.0)
-            else:
-                mlflow.log_metric("faiss_index_created", 0.0)
-            
-            # Log artifacts
-            if get_config_value(config, 'mlflow.log_artifacts', True):
-                if embedding_model_path.exists():
-                    mlflow.log_artifact(str(embedding_model_path))
-                if faiss_index_path.exists():
-                    mlflow.log_artifact(str(faiss_index_path))
-            
             logger.info("Model creation pipeline completed successfully")
-            '''
+            
 
         except Exception as e:
             logger.error(f"Error in model creation pipeline: {e}")

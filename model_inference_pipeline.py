@@ -165,42 +165,27 @@ if __name__ == "__main__":
     logger.info(f"Model path: {model_output_path_for_exp}")
     
     # Setup MLflow
-    setup_mlflow(config, exp_name)
     
-    with mlflow.start_run():
-        # Log parameters
-        mlflow.log_params({
-            'exp_name': exp_name,
-            'processed_dataset_name': processed_dataset_name,
-            'model_name': model_name,
-            'LLM_vendor_name': LLM_vendor_name,
-            'LLM_model_name': LLM_model_name,
-            'processed_data_path': str(processed_data_path_for_exp),
-            'model_path': str(model_output_path_for_exp)
-        })
         
-        try:
-            # Create ModelInference instance
-            model_inference = ModelInference(
-                model_output_folder=model_output_path_for_exp,
-                model_name=model_name,
-                path_to_dataset=processed_data_path_for_exp,
-                LLM_vendor_name=LLM_vendor_name,
-                LLM_model_name=LLM_model_name,
-                LLM_instr_filename=LLM_instr_filename,
-                API_key_string=API_key_string
-            )
-            
-            # Start interactive Q&A session
-            total_questions = interactive_qa_session(model_inference, config, exp_name, model_name)
-            
-            # Log final metrics
-            mlflow.log_metric("total_questions_asked", total_questions)
-            mlflow.log_metric("inference_success", 1.0)
-            
-            logger.info(f"Model inference pipeline completed successfully. Total questions: {total_questions}")
-            
-        except Exception as e:
-            logger.error(f"Error in model inference pipeline: {e}")
-            mlflow.log_metric("inference_success", 0.0)
-            raise 
+    try:
+        # Create ModelInference instance
+        model_inference = ModelInference(
+            model_output_folder=model_output_path_for_exp,
+            model_name=model_name,
+            path_to_dataset=processed_data_path_for_exp,
+            LLM_vendor_name=LLM_vendor_name,
+            LLM_model_name=LLM_model_name,
+            LLM_instr_filename=LLM_instr_filename,
+            API_key_string=API_key_string
+        )
+        
+        # Start interactive Q&A session
+        total_questions = interactive_qa_session(model_inference, config, exp_name, model_name)
+        
+        
+        logger.info(f"Model inference pipeline completed successfully. Total questions: {total_questions}")
+        
+    except Exception as e:
+        logger.error(f"Error in model inference pipeline: {e}")
+        
+        raise 

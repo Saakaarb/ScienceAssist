@@ -93,56 +93,31 @@ if __name__ == "__main__":
     logger.info(f"Processed data path: {processed_dataset_path_for_exp}")
     
     # Setup MLflow
-    setup_mlflow(config, exp_name)
+    #setup_mlflow(config, exp_name)
     
-    with mlflow.start_run():
-        # Log parameters
-        mlflow.log_params({
-            'exp_name': exp_name,
-            'processed_dataset_name': processed_dataset_name,
-            'max_characters': max_characters,
-            'new_after_n_chars': new_after_n_chars,
-            'min_characters': min_characters,
-            'timeout_seconds': timeout_seconds,
-            'raw_dataset_name': str(raw_dataset_name),
-            'processed_dataset_name': str(processed_dataset_name)
-        })
+    
         
-        try:
-            # Create DataExtractor instance
-            data_extractor = DataExtractor(
-                processed_data_location=processed_dataset_path_for_exp,
-                raw_dataset_location=raw_data_path_for_exp,
-                max_characters=max_characters,
-                new_after_n_chars=new_after_n_chars,
-                config=config
-            )
-            
-            # Set timeout
-            data_extractor.timeout_seconds = timeout_seconds
-            data_extractor.min_characters = min_characters
-            
-            # Extract and save data
-            data_extractor.extract_and_save_data()
-            
-            # Log metrics (you'll need to modify DataExtractor to return metrics)
-            # For now, we'll log basic file existence metrics
-            metadata_file = raw_data_path_for_exp / "metadata.csv"
-            #if metadata_file.exists():
-            #    mlflow.log_metric("metadata_file_exists", 1.0)
-            #else:
-            #    mlflow.log_metric("metadata_file_exists", 0.0)
-       
-            
-            # Log artifacts
-            #if get_config_value(config, 'mlflow.log_artifacts', True):
-            #    if metadata_file.exists():
-            #        mlflow.log_artifact(str(metadata_file))
+    try:
+        # Create DataExtractor instance
+        data_extractor = DataExtractor(
+            processed_data_location=processed_dataset_path_for_exp,
+            raw_dataset_location=raw_data_path_for_exp,
+            max_characters=max_characters,
+            new_after_n_chars=new_after_n_chars,
+            config=config
+        )
                 
+        # Extract and save data
+        data_extractor.extract_and_save_data()
+        
+        # Log metrics (you'll need to modify DataExtractor to return metrics)
+        # For now, we'll log basic file existence metrics
+        metadata_file = raw_data_path_for_exp / "metadata.csv"
+        
+                
+        logger.info("Data extraction pipeline completed successfully")
             
-            logger.info("Data extraction pipeline completed successfully")
+    except Exception as e:
+        logger.error(f"Error in data extraction pipeline: {e}")
+        raise
             
-        except Exception as e:
-            logger.error(f"Error in data extraction pipeline: {e}")
-            mlflow.log_metric("extraction_success", 0.0)
-            raise 

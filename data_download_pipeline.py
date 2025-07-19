@@ -110,51 +110,24 @@ if __name__ == "__main__":
     logger.info(f"Starting data download pipeline with query: {user_query}")
     logger.info(f"Experiment name: {args.exp_name}")
     
-    # Setup MLflow with custom experiment name
-    setup_mlflow(config, args.exp_name)
-    
-    with mlflow.start_run():
-        # Log parameters
-        mlflow.log_params({
-            'user_query': user_query,
-            'exp_name': args.exp_name,
-            'num_docs_check': num_docs_check,
-            'num_docs_download': num_docs_download,
-            'LLM_model_name': LLM_model_name,
-            'embedding_model_name': embedding_model_name,
-            'cutoff_score': cutoff_score,
-            'raw_dataset_name': raw_dataset_name
-        })
-        
-        try:
-            # Create DataDownloader instance
-            datadownloader = DataDownloader(
-                downloads_dir=raw_data_path_for_exp,
-                num_docs_check=num_docs_check,
-                num_docs_download=num_docs_download,
-                metadata_filename=metadata_path,
-                LLM_model_name=LLM_model_name,
-                LLM_vendor_name=LLM_vendor_name,
-                embedding_model_name=embedding_model_name,
-                API_key_string=API_key_string,
-                cutoff_score=cutoff_score
-            )
-            
-            
-            # Download data
-            result = datadownloader.download_pdf_data(user_query)
-            
-            # Log metrics (you'll need to modify DataDownloader to return metrics)
-            mlflow.log_metric("papers_downloaded", len(result) if result else 0)
-            mlflow.log_metric("download_success_rate", 1.0 if result else 0.0)
-            
-            # Log artifacts
-            #if get_config_value(config, 'mlflow.log_artifacts', True):
-            #    mlflow.log_artifact(metadata_filename)
-            
-            logger.info("Data download pipeline completed successfully")
-            
-        except Exception as e:
-            logger.error(f"Error in data download pipeline: {e}")
-            mlflow.log_metric("download_success_rate", 0.0)
-            raise 
+    try:
+
+        # Create DataDownloader instance
+        datadownloader = DataDownloader(
+            downloads_dir=raw_data_path_for_exp,
+            num_docs_check=num_docs_check,
+            num_docs_download=num_docs_download,
+            metadata_filename=metadata_path,
+            LLM_model_name=LLM_model_name,
+            LLM_vendor_name=LLM_vendor_name,
+            embedding_model_name=embedding_model_name,
+            API_key_string=API_key_string,
+            cutoff_score=cutoff_score
+        )
+                     
+    # Download data
+        result = datadownloader.download_pdf_data(user_query)
+        print("Finished downloading data")
+    except Exception as e:
+        logger.error(f"Error in data download pipeline: {e}")
+        raise 
