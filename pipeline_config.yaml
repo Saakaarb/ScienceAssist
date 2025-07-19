@@ -1,0 +1,19 @@
+# ScienceAssist Pipeline Configuration
+# This file contains all parameters needed to run the end-to-end pipeline
+
+# Experiment configuration
+experiment:
+  exp_name: "quantum_computing"  # Name of the MLflow experiment (used across all pipelines)
+  user_query: "quantum machine learning"  # Search query for arXiv papers
+
+# Dataset names
+datasets:
+  raw_dataset_name: "quantum_ml_raw"  # Name for the raw dataset
+  processed_dataset_name: "quantum_ml_processed"  # Name for the processed dataset
+
+# Model configuration
+model:
+  model_name: "quantum_ml_model"  # Name for the created model
+
+# Optional: Additional configuration
+# You can add more parameters here if needed for future pipeline enhancements

@@ -1,6 +1,9 @@
 name: Test Install
 
-on: [push]
+on:
+  push:
+    paths:
+      - 'requirements.txt'
 
 jobs:
   build:

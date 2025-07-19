@@ -118,9 +118,9 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
     
     return question_count
 
-if __name__ == "__main__":
-    # Parse command line arguments
-    args = parse_arguments()
+
+
+def main_inference_pipeline(exp_name, processed_dataset_name, model_name):
     load_dotenv()
     # Load configurations
     config = load_pipeline_config('model_inference')
@@ -134,10 +134,10 @@ if __name__ == "__main__":
     data_dir = Path(get_config_value(main_config, 'paths.data_dir', 'data'))
     models_dir = Path(get_config_value(main_config, 'paths.models_dir', 'models'))
     
-    # Extract parameters from config and arguments
-    exp_name = args.exp_name
-    processed_dataset_name = args.processed_dataset_name
-    model_name = args.model_name
+    # Extract parameters from function arguments
+    exp_name = str(exp_name)
+    processed_dataset_name = str(processed_dataset_name)
+    model_name = str(model_name)
     
     # Construct paths
     processed_data_dirname = Path(get_config_value(config, 'paths.processed_data_location', 'processed_data'))

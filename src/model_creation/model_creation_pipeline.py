@@ -38,9 +38,10 @@ def parse_arguments() -> argparse.Namespace:
     
     return parser.parse_args()
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # Parse command line arguments
-    args = parse_arguments()
+    #args = parse_arguments()
+def main_model_creation_pipeline(exp_name, processed_dataset_name, model_name):
     
     # Load configurations
     config = load_pipeline_config('model_creation')
@@ -55,9 +56,9 @@ if __name__ == "__main__":
     models_dir = Path(get_config_value(main_config, 'paths.models_dir', 'models'))
     
     # Extract parameters from config and arguments
-    exp_name = args.exp_name
-    processed_dataset_name = args.processed_dataset_name
-    model_name = args.model_name
+    exp_name = exp_name
+    processed_dataset_name = processed_dataset_name
+    model_name = model_name
     
     # Paths based on experiment name
     processed_data_dirname = Path(get_config_value(config, 'paths.processed_data_location', 'processed_data'))

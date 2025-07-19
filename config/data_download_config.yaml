@@ -17,7 +17,7 @@ model:
   LLM_model_name: "gpt-4.1"
   LLM_vendor_name: "openai"
   embedding_model_name: "all-MiniLM-L6-v2"
-  cutoff_score: 0.5  # Similarity threshold for filtering papers
+  cutoff_score: 0.5  # Similarity threshold for filtering papers. should be between -1 and 1
 
 # API configuration
 api:

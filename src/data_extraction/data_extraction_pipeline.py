@@ -39,10 +39,10 @@ def parse_arguments() -> argparse.Namespace:
     
     return parser.parse_args()
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # Parse command line arguments
-    args = parse_arguments()
-    
+    #args = parse_arguments()
+def main_extraction_pipeline(exp_name, processed_dataset_name, raw_dataset_name):
     # Load configurations
     config = load_pipeline_config('data_extraction')
     main_config = load_pipeline_config('main')
@@ -56,9 +56,9 @@ if __name__ == "__main__":
     if not os.path.isdir(data_dir):
         raise ValueError(f"Data directory {data_dir} does not exist and must exist to proceed. Did you download the dataset using the data_download_pipeline?")
 
-    exp_name = str(args.exp_name)
-    processed_dataset_name = str(args.processed_dataset_name)
-    raw_dataset_name = str(args.raw_dataset_name)
+    exp_name = str(exp_name)
+    processed_dataset_name = str(processed_dataset_name)
+    raw_dataset_name = str(raw_dataset_name)
     # Paths based on experiment name
     raw_data_dirname = Path(get_config_value(config, 'paths.raw_dataset_location', 'raw_data'))
     processed_data_dirname = Path(get_config_value(config, 'paths.processed_data_location', 'processed_data'))

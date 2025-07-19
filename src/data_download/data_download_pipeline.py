@@ -43,9 +43,11 @@ def parse_arguments() -> argparse.Namespace:
 
     return parser.parse_args()
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
+
+def main_download_pipeline(user_query, exp_name, raw_dataset_name):
     # Parse command line arguments
-    args = parse_arguments()
+    #args = parse_arguments()
     
 # Load environment variables
     load_dotenv()
@@ -66,9 +68,9 @@ if __name__ == "__main__":
     
     
     # Extract parameters from config
-    user_query = str(args.user_query)  # Use command line argument instead of config
-    exp_name = str(args.exp_name)
-    raw_dataset_name = str(args.raw_dataset_name)
+    user_query = str(user_query)  # Use command line argument instead of config
+    exp_name = str(exp_name)
+    raw_dataset_name = str(raw_dataset_name)
 
     print(f"User query: {user_query}")
     print(f"Experiment name: {exp_name}")
@@ -108,7 +110,7 @@ if __name__ == "__main__":
     API_key_string = get_config_value(config, 'api.API_key_string', 'OPENAI_API_KEY')
     
     logger.info(f"Starting data download pipeline with query: {user_query}")
-    logger.info(f"Experiment name: {args.exp_name}")
+    logger.info(f"Experiment name: {exp_name}")
     
     try:
 

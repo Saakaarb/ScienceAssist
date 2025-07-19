@@ -16,25 +16,12 @@ paths:
 # Model configuration
 model:
   embedding_model_name: "sentence-transformers/multi-qa-MiniLM-L6-dot-v1"
-  fine_tune_model: false  # Whether to fine-tune the embedding model
-  embedding_model_path: "model/embedding_model/"
-  faiss_index_path: "model/faiss_index.idx"
+
 
 # Vector database parameters
 vector_db:
   index_type: "IndexFlatL2"  # FAISS index type
   normalize_embeddings: true
-  use_gpu: false  # Use GPU for FAISS if available
-
-# Training parameters (if fine-tuning)
-training:
-  batch_size: 32
-  learning_rate: 2e-5
-  num_epochs: 3
-  warmup_steps: 100
-  max_seq_length: 512
-  train_split: 0.8
-  validation_split: 0.2
 
 # MLflow tracking parameters
 mlflow:
