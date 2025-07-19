@@ -61,7 +61,13 @@ ScienceAssist consists of four main pipeline components:
    echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
    ```
 
-### Configuration
+### Configuration and Usage
+
+Suppose you want to create an interactive model which is an expert on the latest research in "quantum machine learning". 
+To do this, you need to provide a dir name for:
+1. Raw PDF data (eg: raw_dataset_name: "quantum_ml_raw")
+2. Processed data (eg: processed_dataset_name: "quantum_ml_processed")
+3. Created Model using this data (eg: model_name:"quantum_ml_model")
 
 Edit `pipeline_config.yaml` to customize your research parameters:
 
@@ -126,7 +132,7 @@ python3 run_pipeline.py --component create
 python3 run_pipeline.py --component inference
 ```
 This is useful if you would like to run a single part of the pipeline several times with different settings,
-to compare performance of different settings of the pipeline configuration.
+to compare performance of different settings of the pipeline configuration in the final model.
 
 Each sub-part of the pipeline has its own configuration file in the `config/` directory:
 - `data_download_config.yaml`
