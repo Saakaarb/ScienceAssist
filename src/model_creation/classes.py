@@ -1,18 +1,20 @@
 from datasets import load_from_disk, Dataset
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 import faiss
 import numpy as np
 import shutil
 import os
 
 class ModelCreator: 
-    def __init__(self, processed_data_location: Path, model_output_folder: Path, embedding_model_name: str) -> None:
+    def __init__(self, processed_data_location: Path, model_output_folder: Path, embedding_model_name: str, cross_encoder_model_name: str) -> None:
         self.processed_data_location=processed_data_location
         self.model_output_folder=model_output_folder
         self.embedding_model_name=embedding_model_name
+        self.cross_encoder_model_name=cross_encoder_model_name
         self.faiss_index_path=model_output_folder/Path("faiss_index.idx")
         self.embedding_model_path=model_output_folder/Path("embedding_model")
+        self.cross_encoder_model_path =model_output_folder/Path("cross_encoder_model")
         
 
     def load_dataset(self) -> Dataset:
@@ -105,3 +107,7 @@ class ModelCreator:
 
         # save the embedding model
         model.save(str(self.embedding_model_path))
+
+        # save the cross encoder model
+        cross_encoder = CrossEncoder(self.cross_encoder_model_name)
+        cross_encoder.save(str(self.cross_encoder_model_path))

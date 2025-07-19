@@ -38,9 +38,7 @@ def parse_arguments() -> argparse.Namespace:
     
     return parser.parse_args()
 
-#if __name__ == "__main__":
-    # Parse command line arguments
-    #args = parse_arguments()
+
 def main_model_creation_pipeline(exp_name, processed_dataset_name, model_name):
     
     # Load configurations
@@ -83,8 +81,7 @@ def main_model_creation_pipeline(exp_name, processed_dataset_name, model_name):
     # Model configuration parameters
     embedding_model_name = get_config_value(config, 'model.embedding_model_name', 'sentence-transformers/multi-qa-MiniLM-L6-dot-v1')
     fine_tune_model = get_config_value(config, 'model.fine_tune_model', False)
-    embedding_model_path = model_output_path_for_exp / Path(get_config_value(config, 'model.embedding_model_path', 'embedding_model/'))
-    faiss_index_path = model_output_path_for_exp / Path(get_config_value(config, 'model.faiss_index_path', 'faiss_index.idx'))
+    cross_encoder_model_name = get_config_value(config, 'model.cross_encoder_model_name', 'cross-encoder/ms-marco-MiniLM-L-6-v2')
     
     # Vector database parameters
     index_type = get_config_value(config, 'vector_db.index_type', 'IndexFlatL2')
@@ -119,7 +116,8 @@ def main_model_creation_pipeline(exp_name, processed_dataset_name, model_name):
             model_creator = ModelCreator(
                 processed_data_location=processed_data_path_for_exp,
                 model_output_folder=model_output_path_for_exp,
-                embedding_model_name=embedding_model_name
+                embedding_model_name=embedding_model_name,
+                cross_encoder_model_name=cross_encoder_model_name,
             )
             
             # Create model

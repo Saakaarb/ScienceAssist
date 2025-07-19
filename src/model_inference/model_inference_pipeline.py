@@ -45,7 +45,8 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
     logger = logging.getLogger(__name__)
     
     # Get inference parameters from config
-    num_docs_to_retrieve = get_config_value(config, 'retrieval.num_docs_to_retrieve', 5)
+    num_chunks_to_retrieve = get_config_value(config, 'retrieval.num_chunks_to_retrieve', 100)
+    num_cross_encoder_results = get_config_value(config, 'retrieval.num_cross_encoder_results', 5)
     temperature = get_config_value(config, 'llm.temperature', 0.1)
     max_tokens = get_config_value(config, 'llm.max_tokens', 1000)
     
@@ -54,7 +55,7 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
     print("="*60)
     print(f"📊 Experiment: {exp_name}")
     print(f"🧠 Model: {model_name}")
-    print(f"📚 Documents to retrieve: {num_docs_to_retrieve}")
+    print(f"📚 Documents to retrieve: {num_chunks_to_retrieve}")
     print(f"🌡️  Temperature: {temperature}")
     print("="*60)
     print("💡 Type your questions below. Type 'quit', 'exit', or 'q' to end the session.")
@@ -85,14 +86,15 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
                 mlflow.log_params({
                     'question_number': question_count,
                     'question': question,
-                    'num_docs_to_retrieve': num_docs_to_retrieve,
+                    'num_chunks_to_retrieve': num_chunks_to_retrieve,
+                    'num_cross_encoder_results': num_cross_encoder_results,
                     'temperature': temperature,
                     'max_tokens': max_tokens
                 })
                 
                 # Get answer from model
                 start_time = mlflow.start_run(nested=True)
-                reply = model_inference.query_model(question, k=num_docs_to_retrieve)
+                reply = model_inference.query_model(question, num_embedding_results=num_chunks_to_retrieve, num_cross_encoder_results=num_cross_encoder_results)
                 
                 # Log metrics
                 mlflow.log_metric("question_number", question_count)

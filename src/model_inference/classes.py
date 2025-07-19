@@ -1,5 +1,5 @@
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 import faiss
 from datasets import load_from_disk
 from src.lib.LLM.helper_functions import create_LLM_instance
@@ -11,6 +11,7 @@ class ModelInference:
         self.model_name=model_name
         self.path_to_dataset=path_to_dataset
         self.embedding_model_path=model_output_folder/Path("embedding_model/")
+        self.cross_encoder_model_path=model_output_folder/Path("cross_encoder_model/")
         self.faiss_index_path=model_output_folder/Path("faiss_index.idx")
         if API_key_string is None:
             raise ValueError("API key string is required")
@@ -36,7 +37,8 @@ class ModelInference:
         Returns:
             None (sets self.model and self.index attributes)
         """
-        self.model= SentenceTransformer(str(self.embedding_model_path))
+        self.embedding_model= SentenceTransformer(str(self.embedding_model_path))
+        self.cross_encoder_model= CrossEncoder(str(self.cross_encoder_model_path))
         self.index = faiss.read_index(str(self.faiss_index_path))
     
     def load_dataset(self) -> None:
@@ -138,8 +140,17 @@ class ModelInference:
 
         return reply
 
+    def rerank_texts(self, question: str, returned_texts_with_metadata: list[dict], num_cross_encoder_results: int = 5) -> list[dict]:
+        """
+        Rerank the retrieved texts using the cross encoder model.
+        """
+        num_cross_encoder_results = min(num_cross_encoder_results,len(returned_texts_with_metadata))
+        cross_encoder_scores=self.cross_encoder_model.predict([question]*len(returned_texts_with_metadata),returned_texts_with_metadata)
+        sorted_indices=np.argsort(cross_encoder_scores)[::-1]
+        return [returned_texts_with_metadata[i] for i in sorted_indices[:num_cross_encoder_results]]
 
-    def query_model(self, question: str, k: int = 5) -> str:
+
+    def query_model(self, question: str, num_embedding_results: int = 100, num_cross_encoder_results: int = 5) -> str:
         """
         Main inference function to answer user questions using retrieval-augmented generation.
         
@@ -167,12 +178,12 @@ class ModelInference:
             based on the provided scientific literature context with proper citations.
         """
         print("Thinking...")
-        query_embedding = self.model.encode_query([question]).astype('float32')
-        distances, indices = self.index.search(query_embedding, k)
+        query_embedding = self.embedding_model.encode_query([question]).astype('float32')
+        distances, indices = self.index.search(query_embedding, num_embedding_results)
         
         returned_texts_with_metadata=self.get_context_from_dataset(indices)
-
-        formatted_question=self.prepare_question_for_llm(question,returned_texts_with_metadata)
+        reranked_texts_with_metadata=self.rerank_texts(question,returned_texts_with_metadata,num_cross_encoder_results)
+        formatted_question=self.prepare_question_for_llm(question,reranked_texts_with_metadata)
         reply=self.query_llm(formatted_question)
         return reply
 
