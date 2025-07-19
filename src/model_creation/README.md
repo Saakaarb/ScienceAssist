@@ -1,6 +1,6 @@
 # Model Creation Module 🤖
 
-The Model Creation module is the third component of the ScienceAssist pipeline, responsible for transforming processed text chunks into searchable vector embeddings and creating efficient retrieval systems. This module implements state-of-the-art embedding generation and vector database creation for RAG (Retrieval-Augmented Generation) systems.
+The Model Creation module is the third component of the ScienceAssist pipeline, responsible for transforming processed text chunks into searchable vector embeddings and creating efficient retrieval systems with advanced reranking capabilities. This module implements state-of-the-art embedding generation, cross-encoder models, and vector database creation for RAG (Retrieval-Augmented Generation) systems.
 
 ## 🧠 Algorithm Overview
 
@@ -42,9 +42,15 @@ The model creation process follows a sophisticated pipeline designed to create h
 - **Output**: FAISS vector index for efficient retrieval
 - **Purpose**: Enable fast similarity search over embeddings
 
-### **Stage 6: Model Persistence**
-- **Input**: Embedding model and FAISS index
-- **Process**: Saves both components to disk in specified locations
+### **Stage 6: Cross-Encoder Model Creation**
+- **Input**: Cross-encoder model name from configuration
+- **Process**: Loads pre-trained cross-encoder model for reranking
+- **Output**: Cross-encoder model ready for inference
+- **Purpose**: Enable advanced reranking for improved retrieval accuracy
+
+### **Stage 7: Model Persistence**
+- **Input**: Embedding model, cross-encoder model, and FAISS index
+- **Process**: Saves all components to disk in specified locations
 - **Output**: Persistent model files for inference
 - **Purpose**: Enable model reuse and deployment
 
@@ -65,6 +71,7 @@ paths:
 ```yaml
 model:
   embedding_model_name: "sentence-transformers/multi-qa-MiniLM-L6-dot-v1"
+  cross_encoder_model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
 ```
 
 ### **Vector Database Parameters**
@@ -92,6 +99,34 @@ performance:
   - `"sentence-transformers/all-mpnet-base-v2"`: Higher quality, slower
 - **Impact**: Determines embedding quality and speed
 - **Recommendation**: `"multi-qa-MiniLM-L6-dot-v1"` for RAG systems
+
+### **`cross_encoder_model_name`**
+- **Purpose**: Pre-trained cross-encoder model for reranking retrieved documents
+- **Options**:
+  - `"cross-encoder/ms-marco-MiniLM-L-6-v2"`: Fast and effective (recommended)
+  - `"cross-encoder/ms-marco-MiniLM-L-12-v2"`: Higher quality, slower
+  - `"cross-encoder/ms-marco-TinyBERT-L-6"`: Very fast, smaller model
+- **Impact**: Determines reranking accuracy and inference speed
+- **Recommendation**: `"cross-encoder/ms-marco-MiniLM-L-6-v2"` for balanced performance
+
+## 🔍 Model Types Explained
+
+### **Sentence Transformers (Bi-Encoders)**
+- **Architecture**: BERT-based models fine-tuned for sentence similarity
+- **Output**: 384-768 dimensional vectors
+- **Training**: Contrastive learning on sentence pairs
+- **Use Case**: First-stage retrieval and semantic similarity
+
+### **Cross-Encoders**
+- **Architecture**: BERT-based models that jointly encode query-document pairs
+- **Output**: Single relevance score for query-document pair
+- **Training**: Supervised learning on relevance labels
+- **Use Case**: Second-stage reranking for improved accuracy
+
+### **Two-Stage Retrieval Pipeline**
+1. **First Stage (Bi-Encoder)**: Fast retrieval of candidate documents using FAISS
+2. **Second Stage (Cross-Encoder)**: Precise reranking of candidates for final selection
+3. **Benefits**: Combines speed of bi-encoders with accuracy of cross-encoders
 
 
 

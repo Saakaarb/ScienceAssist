@@ -16,6 +16,7 @@ An intelligent LLM-based research assistant that accelerates your research on te
 - **📥 Automated Data Download**: Downloads relevant PDFs from arXiv based on your search queries
 - **📄 Intelligent Text Extraction**: Processes PDFs into searchable text chunks with metadata
 - **🧠 Vector Database Creation**: Builds FAISS vector databases for efficient document retrieval
+- **🔄 Cross-Encoder Reranking**: Uses advanced reranking to improve retrieval accuracy
 - **🤖 Interactive Q&A**: Ask questions and get AI-powered answers based on the research papers
 - **⚙️ Configurable Pipeline**: Easy-to-use YAML configuration for all parameters
 
@@ -25,8 +26,8 @@ ScienceAssist consists of four main pipeline components:
 
 1. **Data Download Pipeline**: Searches arXiv and downloads relevant PDFs using a smart query method
 2. **Data Extraction Pipeline**: Extracts and processes text from PDFs based on user set-able parameters
-3. **Model Creation Pipeline**: Creates embedding models and vector databases
-4. **Model Inference Pipeline**: Provides interactive Q&A capabilities
+3. **Model Creation Pipeline**: Creates embedding models, cross-encoder models, and vector databases
+4. **Model Inference Pipeline**: Provides interactive Q&A with advanced reranking capabilities
 
 ## 🚀 Quick Start
 
@@ -100,8 +101,8 @@ python3 run_pipeline.py
 This will:
 1. Download PDFs from arXiv based on your query, and other queries semantically similar to it
 2. Extract and process the text
-3. Create embedding models and vector databases
-4. Start an interactive Q&A session
+3. Create embedding models, cross-encoder models, and vector databases
+4. Start an interactive Q&A session with advanced reranking
 
 
 ### Running the Created Model

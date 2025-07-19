@@ -16,6 +16,7 @@ paths:
 # Model configuration
 model:
   embedding_model_name: "sentence-transformers/multi-qa-MiniLM-L6-dot-v1"
+  cross_encoder_model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 
 # Vector database parameters
