@@ -164,7 +164,7 @@ def run_full_pipeline(config_file: str = "pipeline_config.yaml") -> bool:
         print(f"  • Model: models/{exp_name}/{model_name}/")
         print()
         print("🔍 Next Steps:")
-        print(f"  • Run inference: python3 model_inference_pipeline.py --exp_name '{exp_name}' --processed_dataset_name '{processed_dataset_name}' --model_name '{model_name}'")
+        print(f"  • Run inference: python3 run_pipeline.py --component inference --exp_name '{exp_name}' --processed_dataset_name '{processed_dataset_name}' --model_name '{model_name}'")
         print("  • Check MLflow UI for experiment tracking")
         print()
         print("📝 Configuration:")
