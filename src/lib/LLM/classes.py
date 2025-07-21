@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+from tqdm import tqdm
 
 class LLMBase():
 
@@ -21,7 +22,7 @@ class LLMBase():
 
     def set_API_key(self,API_key_string=None):
         
-        print("Note: Set the env key as an environment variable")
+        
         self.API_key=os.getenv(API_key_string)
         if not self.API_key:
             raise ValueError(f"API key not found in environment variable {API_key_string}") 
@@ -30,9 +31,17 @@ class LLMBase():
 
         return self._init_client()
     
-    def create_vector_database(self):
+    def create_vector_database(self,text_list):
 
-        return self._create_vector_database()
+        return self._create_vector_database(text_list)
+
+    def query_vector_store(self,query):
+
+        return self._query_vector_store(query)
+
+    def delete_vector_store(self):
+
+        return self._delete_vector_store()
 
     def query_model(self,query,instr_filename):
 
@@ -75,13 +84,54 @@ class OpenAI_model(LLMBase):
             )
         self.vector_store_id=vector_store.id
 
+        # just in case vector store is not deleted
+        self.client.vector_stores.update(
+        vector_store_id=self.vector_store_id,
+        expires_after={
+            "anchor": "last_active_at",
+            "days": 1
+        }
+        )
 
     def _upload_text_to_vector_store(self,text_list):
 
-        self.client.vector_stores.files.create(
+        # Upload each text chunk individually
+        import tempfile
+        import os
+        
+        file_ids = []
+        
+        for i, text in tqdm(enumerate(text_list),total=len(text_list),desc="Uploading text to vector store"):
+            # Create a temporary file for each chunk
+            
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+                temp_file.write(text)
+                temp_file_path = temp_file.name
+            
+            # Upload the file to OpenAI
+            with open(temp_file_path, 'rb') as file:
+                uploaded_file = self.client.files.create(
+                    file=file,
+                    purpose='assistants'
+                )
+                file_ids.append(uploaded_file.id)
+            
+            # Clean up temporary file
+            os.unlink(temp_file_path)
+        
+        # Add all files to vector store
+        self.client.vector_stores.file_batches.create(
             vector_store_id=self.vector_store_id,
-            file=text_list
+            file_ids=file_ids
         )
+    
+    def _query_vector_store(self,query):
+        
+        response=self.client.vector_stores.search(
+            vector_store_id=self.vector_store_id,
+            query=query
+        )
+        return response
 
     def _delete_vector_store(self):
 
@@ -95,13 +145,6 @@ class OpenAI_model(LLMBase):
         # Prepare input content
         input_content = [{"type":"input_text", "text":query}]
         
-        # Add vector store if provided
-        if self.vector_store_id is not None:
-            
-            input_content.append({
-                "type": "vector_store",
-                "vector_store_id": self.vector_store_id
-            })
 
         response= self.client.responses.create(
                     model=self.model_name,

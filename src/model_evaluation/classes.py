@@ -8,7 +8,10 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from src.lib.LLM.classes import LLMBase
 from src.lib.LLM.helper_functions import create_LLM_instance
+from tqdm import tqdm
+import random
 
 # This class is used to evaluate the performance of the model.
 # Steps:
@@ -30,6 +33,7 @@ class ModelEvaluation:
 
         
         self.eval_dataset_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_dataset.txt")
+        self.eval_results_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_results.txt")
         if not os.path.isdir(self.eval_dataset_path.parent.parent):
             os.makedirs(self.eval_dataset_path.parent.parent)
         if not os.path.isdir(self.eval_dataset_path.parent):
@@ -53,13 +57,15 @@ class ModelEvaluation:
         self.llm_vendor_name=get_config_value(self.eval_config, "model.LLM_vendor_name")
         
         
-        self.instructions_file_path=Path("src/lib/LLM/LLM_instr_files/question_generation_instructions.txt")
+        self.question_generation_instructions_file_path=Path("src/lib/LLM/LLM_instr_files/question_generation_instructions.txt")
+        self.answer_generation_instructions_file_path=Path("src/lib/LLM/LLM_instr_files/answer_generation_instructions.txt")
         # some settings
-        self.num_top_topics_for_questions=get_config_value(self.eval_config, "evaluation.num_top_topics_for_questions")
-        self.num_random_topics_for_questions=get_config_value(self.eval_config, "evaluation.num_random_topics_for_questions")
-        self.num_questions_per_topic=get_config_value(self.eval_config, "evaluation.num_questions_per_topic")
-        self.topic_confidence_threshold=get_config_value(self.eval_config, "evaluation.topic_confidence_threshold")
+        self.num_top_topics_for_questions=get_config_value(self.eval_config, "dataset_generation.num_top_topics_for_questions")
+        self.num_random_topics_for_questions=get_config_value(self.eval_config, "dataset_generation.num_random_topics_for_questions")
+        self.num_questions_per_topic=get_config_value(self.eval_config, "dataset_generation.num_questions_per_topic")
+        self.topic_confidence_threshold=get_config_value(self.eval_config, "dataset_generation.topic_confidence_threshold")
         # datasets to generate
+        self.chunks_for_openai_limits=490
 
     def clean_text_for_topic_analysis(self, text: str) -> str:
         """
@@ -160,8 +166,7 @@ class ModelEvaluation:
 
     def generate_question_for_single_topic(self, llm_instance, topic_keywords, chunks)->None:
 
-        print("Topic keywords: ", topic_keywords)
-        
+
         query=f"Generate {self.num_questions_per_topic} questions for the following topic using keywords:"
         for tuple_value in topic_keywords:
             query+=f"{tuple_value[0]}: \n"
@@ -172,34 +177,45 @@ class ModelEvaluation:
         #    query+=f"{chunk}\n"
         #    query+="\n"
 
-        answer=llm_instance.query_model(query, self.instructions_file_path)
+        answer=llm_instance.query_model(query, self.question_generation_instructions_file_path)
         
-        return answer
+        # split answer into questions
+        all_questions=answer.split("---")
+
+        #assert len(all_questions)==self.num_questions_per_topic, "Number of questions generated is not equal to the number of questions per topic"
+
+
+        return all_questions
 
     def generate_questions_from_topics(self, topics_for_questions, chunks_for_topics)->None:
-        print("Generating questions from topics")
+        
 
         reference_file_paths=[]
-        llm_instance=create_LLM_instance(self.llm_API_key, [], self.llm_model_name, self.llm_vendor_name)
+        print("Creating LLM instance...")
+        llm_instance=create_LLM_instance(self.llm_API_key, reference_file_paths, self.llm_model_name, self.llm_vendor_name)
 
         all_questions=[]
-        for i, topic in enumerate(topics_for_questions):
+        for i, topic in tqdm(enumerate(topics_for_questions),total=len(topics_for_questions),desc="Generating questions from topics")   :
             curr_topic_keywords=topics_for_questions[i]
             curr_chunks=chunks_for_topics[i]
 
             questions=self.generate_question_for_single_topic(llm_instance, curr_topic_keywords, curr_chunks)
 
-            all_questions.append(questions)  
+            all_questions+=questions 
 
         return all_questions
 
-    def change_chunk_format(self, chunks: list[str]) -> list[str]:
+    def change_chunk_format(self, all_topic_chunks: list[list[str]]) -> list[str]:
         """
         Change the format of the chunks to be used for the LLM vector database.
         """
         modified_chunks=[]
-        for chunk in chunks:
-            modified_chunks.append({"content":chunk["text"]})
+        
+        for topic_chunks in all_topic_chunks:
+            
+            for chunk in topic_chunks:
+                
+                modified_chunks.append(chunk)
 
         return modified_chunks
 
@@ -244,7 +260,7 @@ class ModelEvaluation:
         
         # top N topics
         for i in range(self.num_top_topics_for_questions):
-            # Get all documents that are identified as being related to topic i using doc_info
+            # Get all documents that are identified as being related to topic i using doc_info with confidence threshold
             topic_docs_mask = (doc_info['Topic'] == i) & (doc_info['Probability'] > self.topic_confidence_threshold)
             topic_docs_indices = doc_info[topic_docs_mask].index.tolist()
             topic_docs = [all_text[idx] for idx in topic_docs_indices]
@@ -300,45 +316,92 @@ class ModelEvaluation:
         llm_instance=create_LLM_instance(self.llm_API_key, [], self.llm_model_name, self.llm_vendor_name)
 
         # fetch processed database
-        processed_chunks=self.change_chunk_format(self.dataset)
+        
+        processed_chunks=self.change_chunk_format(chunks_for_topics)
+        if len(processed_chunks)>self.chunks_for_openai_limits:
+            #select random chunks from processed_chunks
+            processed_chunks=random.sample(processed_chunks, self.chunks_for_openai_limits)
+        print("Creating vector database...")
         llm_instance.create_vector_database(processed_chunks)
 
+        # retrieve relevant chunks from OpenAI vector store for each question
+        chunks_for_all_questions=[]
+        # retrieving relevant chunks from remote vector database
+        print("Retrieving relevant chunks from remote vector database")
+        for question in tqdm(all_questions):
+            chunks_for_question=[]
+            vector_store_result=list(llm_instance.query_vector_store(question))
+            
+            # Extract text from VectorStoreSearchResponse objects
+            for result in vector_store_result:
+                # Each result is a VectorStoreSearchResponse object
+                if hasattr(result, 'content') and result.content:
+                    for content_item in result.content:
+                        # Each content_item is a Content object with a 'text' attribute
+                        if hasattr(content_item, 'text'):
+                            chunks_for_question.append(content_item.text)
+
+            chunks_for_all_questions.append(chunks_for_question)
+
+        
         # save in Q/A format
 
-        self.save_questions_to_file(all_questions,llm_instance)
+        self.save_questions_answers_to_file(all_questions,chunks_for_all_questions,llm_instance)
 
-    def save_questions_answers_to_file(self, all_questions: list[str], llm_instance) -> None:
-        """
-        Save all generated questions to a text file for evaluation.
-        
-        This function takes a list of question strings and saves them to a text file
-        at the evaluation dataset path. Each question string is written on a separate line.
-        
-        Args:
-            all_questions (list[str]): List of question strings to save
-            
-        Returns:
-            None (saves questions to file)
-            
-        Note:
-            Creates the eval_data directory if it doesn't exist.
+    def save_questions_answers_to_file(self, all_questions: list[str], chunks_for_all_questions: list[list[str]], llm_instance: LLMBase) -> None:
         """
         
-        # Save questions to file
+        """
+        all_questions_with_chunks_and_answers=""
+
+        
+        for i, question_string in tqdm(enumerate(all_questions),total=len(all_questions),desc="Generating answers for questions"):
+            combined_query = "Please answer the following question:\n\n"
+            current_question=all_questions[i]
+            current_chunks=chunks_for_all_questions[i]
+            combined_query += f"Question {i+1}:\n{current_question}\n\n"
+            combined_query += "Context: \n"
+            combined_query += "---"
+            for chunk in current_chunks:
+                combined_query += f"{chunk}\n\n"
+
+            
+            combined_query += "---"
+
+            answer=llm_instance.query_model(combined_query, self.answer_generation_instructions_file_path)
+            combined_query+="Answer: \n\n"
+            combined_query += answer
+
+            combined_query += "---"
+
+            all_questions_with_chunks_and_answers+=combined_query
+            all_questions_with_chunks_and_answers+="---\n\n\n"
+        
+
+        llm_instance.delete_vector_store()
+
+        # Save combined query to file
         with open(self.eval_dataset_path, 'w', encoding='utf-8') as f:
-            f.write(f"# Evaluation Questions for {self.dataset_path.name}\n")
+            f.write(f"# Combined Evaluation Query for {self.dataset_path.name}\n")
             f.write(f"# Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"# Total questions: {len(all_questions)}\n")
+            f.write(f"# Total questions combined: {len(all_questions)}\n")
             f.write("=" * 80 + "\n\n")
-            
-            for i, question_string in enumerate(all_questions, 1):
-                f.write(f"Question Set {i}:\n")
-                f.write(question_string)
-                f.write("\n" + "-" * 40 + "\n\n")
+            f.write(all_questions_with_chunks_and_answers)
         
-        print(f"✅ Saved {len(all_questions)} question sets to: {self.eval_dataset_path}")
+        print(f"✅ Saved combined query with {len(all_questions)} questions to: {self.eval_dataset_path}")
+        
+        
 
-            
+
+    # TODO: Init model inference
+    # TODO: Query model
+    # TODO: return answers to questions
+
+    def query_created_model(self,):
+        pass
+
+    def compare_answers(self,):
+        pass
 
     def evaluate_model(self):
         
@@ -352,7 +415,7 @@ class ModelEvaluation:
 
         # load questions from file
         with open(self.eval_dataset_path, 'r', encoding='utf-8') as f:
-            questions=f.readlines()
+            questions_context_and_answers=f.readlines()
         
         # generate answers from your RAG/RAG+SFT model
 

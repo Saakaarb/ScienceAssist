@@ -15,7 +15,7 @@ model:
   LLM_vendor_name: "openai"
 
 dataset_generation:
-  num_top_topics_for_questions: 10 # number of top topics to use for questions
+  num_top_topics_for_questions: 5 # number of top topics to use for questions
   num_random_topics_for_questions: 5 # number of random topics to use for questions
   num_questions_per_topic: 2  # number of questions to generate for each topic
   topic_confidence_threshold: 0.5 # should be between 0 and 1; see "Probability" column in BERTopic output for more info

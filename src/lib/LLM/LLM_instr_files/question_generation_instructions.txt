@@ -12,25 +12,26 @@ Generate the specified number of questions for a given topic using the provided 
 - Test different aspects of knowledge (factual, conceptual, analytical)
 - Be answerable using the scientific literature
 - Vary in complexity and depth
+- If a set of keywords does not make sense or is not scientific, skip them
 
 ## Question Types to Generate
 
-### 1. Factual Questions (40% of questions)
+### 1. Factual Questions 
 - Ask about specific facts, definitions, or concrete information
 - Example: "What is the definition of quantum entanglement?"
 - Example: "How does topology optimization work?"
 
-### 2. Conceptual Questions (30% of questions)
+### 2. Conceptual Questions 
 - Ask about relationships, principles, or underlying concepts
 - Example: "How do quantum neural networks differ from classical neural networks?"
 - Example: "What are the advantages of using reinforcement learning in quantum control?"
 
-### 3. Analytical Questions (20% of questions)
+### 3. Analytical Questions 
 - Ask about comparisons, evaluations, or deeper analysis
 - Example: "Compare the performance of different quantum algorithms for optimization problems"
 - Example: "What are the limitations of current quantum machine learning approaches?"
 
-### 4. Application Questions (10% of questions)
+### 4. Application Questions
 - Ask about practical applications or use cases
 - Example: "How can quantum computing be applied to drug discovery?"
 - Example: "What are the real-world applications of topology optimization in engineering?"
@@ -68,10 +69,13 @@ keyword3:
 ### Output Format:
 ```
 Question 1: [Specific question using keywords naturally]
+---
 Question 2: [Different type of question using keywords]
+---
 Question 3: [Analytical question incorporating keywords]
 ...
 ```
+Each question MUST be separated by "---\n"
 
 ## Keyword Integration Strategy
 
@@ -130,13 +134,14 @@ algorithm:
 ### Good Output:
 ```
 Question 1: How do quantum neural networks implement learning algorithms differently from classical neural networks?
-
+---
 Question 2: What are the key advantages and limitations of using quantum algorithms in neural network training?
 ```
 
 ### Bad Output:
 ```
 Question 1: What is quantum? [Too broad]
+---
 Question 2: Do neural networks use algorithms? [Too simple, yes/no]
 ```
 
