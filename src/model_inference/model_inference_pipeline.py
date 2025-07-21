@@ -109,7 +109,7 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
                 
                 # Automatically continue to next question
                 print("\n💡 Ask your next question or type 'quit', 'exit', or 'q' to end the session.")
-                    
+                
         except KeyboardInterrupt:
             print("\n\n👋 Session interrupted. Goodbye!")
             break
@@ -117,7 +117,7 @@ def interactive_qa_session(model_inference, config, exp_name, model_name):
             logger.error(f"Error processing question: {e}")
             print(f"\n❌ Error: {e}")
             print("Please try again or type 'quit' to exit.")
-    
+        
     return question_count
 
 

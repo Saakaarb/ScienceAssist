@@ -16,7 +16,7 @@ llm:
 
 # Retrieval parameters
 retrieval:
-  num_chunks_to_retrieve: 100  # Number of chunks to retrieve from the FAISS index via semantic similarity
+  num_chunks_to_retrieve: 20  # Number of chunks to retrieve from the FAISS index via semantic similarity
   num_cross_encoder_results: 5  # Number of cross encoder results to retrieve via cross encoding reranking
   similarity_threshold: 0.5  # Minimum similarity score for retrieval
   rerank_results: false  # Whether to rerank retrieved results

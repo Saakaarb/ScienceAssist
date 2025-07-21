@@ -145,7 +145,8 @@ class ModelInference:
         Rerank the retrieved texts using the cross encoder model.
         """
         num_cross_encoder_results = min(num_cross_encoder_results,len(returned_texts_with_metadata))
-        cross_encoder_scores=self.cross_encoder_model.predict([question]*len(returned_texts_with_metadata),returned_texts_with_metadata)
+        sentence_pairs=[[question,returned_texts_with_metadata[i]['text']] for i in range(len(returned_texts_with_metadata))]
+        cross_encoder_scores=self.cross_encoder_model.predict(sentence_pairs)
         sorted_indices=np.argsort(cross_encoder_scores)[::-1]
         return [returned_texts_with_metadata[i] for i in sorted_indices[:num_cross_encoder_results]]
 

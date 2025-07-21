@@ -1,6 +1,5 @@
 from pathlib import Path
 from src.utils.config_loader import ConfigLoader,get_config_value
-
 import os
 import datetime
 from bertopic import BERTopic
@@ -31,6 +30,13 @@ class ModelEvaluation:
 
         
         self.eval_dataset_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_dataset.txt")
+        if not os.path.isdir(self.eval_dataset_path.parent.parent):
+            os.makedirs(self.eval_dataset_path.parent.parent)
+        if not os.path.isdir(self.eval_dataset_path.parent):
+            os.makedirs(self.eval_dataset_path.parent)
+        if os.path.isfile(self.eval_dataset_path):
+            raise ValueError(f"Evaluation dataset already exists at {self.eval_dataset_path} and cannot be overwritten. Please delete it and run the evaluation pipeline again.")
+
         #dataset_config_path=dataset_path/Path("data_extraction_config.yaml")
         #model_config_path=model_path/Path("model_creation_config.yaml")
 
@@ -46,14 +52,13 @@ class ModelEvaluation:
         self.llm_model_name=get_config_value(self.eval_config, "model.LLM_model_name")
         self.llm_vendor_name=get_config_value(self.eval_config, "model.LLM_vendor_name")
         
-
         
         self.instructions_file_path=Path("src/lib/LLM/LLM_instr_files/question_generation_instructions.txt")
         # some settings
-        self.num_top_topics_for_questions=10
-        self.num_random_topics_for_questions=5
-        self.num_questions_per_topic=2
-        self.topic_confidence_threshold=0.5
+        self.num_top_topics_for_questions=get_config_value(self.eval_config, "evaluation.num_top_topics_for_questions")
+        self.num_random_topics_for_questions=get_config_value(self.eval_config, "evaluation.num_random_topics_for_questions")
+        self.num_questions_per_topic=get_config_value(self.eval_config, "evaluation.num_questions_per_topic")
+        self.topic_confidence_threshold=get_config_value(self.eval_config, "evaluation.topic_confidence_threshold")
         # datasets to generate
 
     def clean_text_for_topic_analysis(self, text: str) -> str:
@@ -250,9 +255,9 @@ class ModelEvaluation:
                 chunks_for_topics.append(topic_docs)
                 topics_added += 1
                 
-                print(f"Topic {i}: {len(topic_docs)} documents (confidence > 0.5)")
+                print(f"Topic {i}: {len(topic_docs)} documents (confidence > {self.topic_confidence_threshold})")
             else:
-                print(f"Topic {i}: Skipped (no documents with confidence > 0.5)")
+                print(f"Topic {i}: Skipped (no documents with confidence > {self.topic_confidence_threshold})")
             
         '''
         # some random topics   
