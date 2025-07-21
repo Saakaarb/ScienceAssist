@@ -30,7 +30,7 @@ class DataDownloader:
         self.LLM_vendor_name = LLM_vendor_name
         self.embedding_model_name = embedding_model_name
         self.cutoff_score=cutoff_score # cutoff score for similarity scores
-
+        self.config_file_path=Path("config")/Path("data_download_config.yaml")
         self.instr_filename=Path("src/lib/LLM/LLM_instr_files/semantically_similar_queries_instr.txt")
         if API_key_string is None:
             raise ValueError("API key string is required")
@@ -86,6 +86,30 @@ class DataDownloader:
 
         return papers_metadata
 
+    def save_config_copy(self) -> None:
+        """
+        Save a copy of the configuration file to the model output directory.
+        
+        This function copies the model creation configuration file to the model output
+        directory for reproducibility and documentation purposes.
+        
+        Args:
+            None (uses self.config_file_path and self.model_output_folder from class instance)
+            
+        Returns:
+            None (saves config file to model output directory)
+            
+        Note:
+            If no config file path is provided, this function does nothing.
+        """
+        if self.config_file_path and self.config_file_path.exists():
+            config_copy_path = self.downloads_dir / Path("data_download_config.yaml")
+            shutil.copy2(self.config_file_path, config_copy_path)
+            print(f"Configuration file saved to: {config_copy_path}")
+        elif self.config_file_path:
+            print(f"Warning: Configuration file not found at {self.config_file_path}")
+        else:
+            print("No configuration file path provided, skipping config copy")
 
     def generate_semantically_similar_queries(self,user_query: str) -> list[str]:
         """
@@ -384,4 +408,5 @@ class DataDownloader:
                 ])
 
         print(f"\nMetadata saved to {self.metadata_file}")
+        self.save_config_copy()
         return filtered_papers_metadata

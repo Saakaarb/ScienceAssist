@@ -28,7 +28,8 @@ class DataExtractor:
         self.config=config
         self.min_characters=get_config_value(self.config, 'text_processing.min_characters', 100)
         self.timeout_seconds=get_config_value(self.config, 'text_processing.timeout_seconds', 180)
-        
+        self.config_file_path=Path("config")/Path("data_extraction_config.yaml")
+
     def fetch_raw_dataset(self) -> tuple[pd.DataFrame, list[str]]:
         """
         Load and preprocess the raw dataset metadata from the data download pipeline.
@@ -143,6 +144,31 @@ class DataExtractor:
         except Exception as e:
             signal.alarm(0)  # Cancel the alarm
             raise e
+
+    def save_config_copy(self) -> None:
+        """
+        Save a copy of the configuration file to the model output directory.
+        
+        This function copies the model creation configuration file to the model output
+        directory for reproducibility and documentation purposes.
+        
+        Args:
+            None (uses self.config_file_path and self.model_output_folder from class instance)
+            
+        Returns:
+            None (saves config file to model output directory)
+            
+        Note:
+            If no config file path is provided, this function does nothing.
+        """
+        if self.config_file_path and self.config_file_path.exists():
+            config_copy_path = self.processed_data_location / Path("data_extraction_config.yaml")
+            shutil.copy2(self.config_file_path, config_copy_path)
+            print(f"Configuration file saved to: {config_copy_path}")
+        elif self.config_file_path:
+            print(f"Warning: Configuration file not found at {self.config_file_path}")
+        else:
+            print("No configuration file path provided, skipping config copy")
 
     def get_curr_pdf_metadata(self,pdf_file_name: str,raw_metadata_df: pd.DataFrame) -> dict:
         """
@@ -284,3 +310,4 @@ class DataExtractor:
         print("Total number of chunks extracted: ",len(all_chunk_data))
         dataset = Dataset.from_list(all_chunk_data)
         dataset.save_to_disk(self.processed_data_location)
+        self.save_config_copy()

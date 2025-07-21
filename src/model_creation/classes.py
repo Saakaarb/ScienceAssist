@@ -12,6 +12,8 @@ class ModelCreator:
         self.model_output_folder=model_output_folder
         self.embedding_model_name=embedding_model_name
         self.cross_encoder_model_name=cross_encoder_model_name
+
+        self.config_file_path=Path("config")/Path("model_creation_config.yaml")
         self.faiss_index_path=model_output_folder/Path("faiss_index.idx")
         self.embedding_model_path=model_output_folder/Path("embedding_model")
         self.cross_encoder_model_path =model_output_folder/Path("cross_encoder_model")
@@ -51,6 +53,31 @@ class ModelCreator:
             all_text.append(example["text"])
         return all_text
 
+    def save_config_copy(self) -> None:
+        """
+        Save a copy of the configuration file to the model output directory.
+        
+        This function copies the model creation configuration file to the model output
+        directory for reproducibility and documentation purposes.
+        
+        Args:
+            None (uses self.config_file_path and self.model_output_folder from class instance)
+            
+        Returns:
+            None (saves config file to model output directory)
+            
+        Note:
+            If no config file path is provided, this function does nothing.
+        """
+        if self.config_file_path and self.config_file_path.exists():
+            config_copy_path = self.model_output_folder / Path("model_creation_config.yaml")
+            shutil.copy2(self.config_file_path, config_copy_path)
+            print(f"Configuration file saved to: {config_copy_path}")
+        elif self.config_file_path:
+            print(f"Warning: Configuration file not found at {self.config_file_path}")
+        else:
+            print("No configuration file path provided, skipping config copy")
+
     def create_model(self) -> None:
         """
         Main pipeline function to create embedding model and vector database.
@@ -75,10 +102,14 @@ class ModelCreator:
         6. Add embeddings to the index
         7. Save FAISS index to disk
         8. Save embedding model to disk
+        9. Save cross-encoder model to disk
+        10. Save configuration file copy to disk
         
         Files Created:
         - faiss_index.idx: FAISS vector index for similarity search
         - embedding_model/: Directory containing the saved sentence transformer model
+        - cross_encoder_model/: Directory containing the saved cross-encoder model
+        - model_creation_config.yaml: Copy of the configuration file used for model creation
         """
         print("Loading dataset...")
         dataset=self.load_dataset()
@@ -111,3 +142,6 @@ class ModelCreator:
         # save the cross encoder model
         cross_encoder = CrossEncoder(self.cross_encoder_model_name)
         cross_encoder.save(str(self.cross_encoder_model_path))
+
+        # save a copy of the configuration file
+        self.save_config_copy()

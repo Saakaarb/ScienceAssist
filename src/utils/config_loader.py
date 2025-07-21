@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
 
+
 class ConfigLoader:
     """
     Utility class to load and manage YAML configuration files for the ScienceAssist pipeline.
@@ -91,7 +92,7 @@ class ConfigLoader:
                 return False
         return True
 
-# Convenience functions for common config operations
+# Convenience functions for common config operations from main config folder
 def load_pipeline_config(pipeline_name: str) -> Dict[str, Any]:
     """Load configuration for a specific pipeline."""
     loader = ConfigLoader()

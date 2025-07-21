@@ -14,7 +14,7 @@ from src.data_download.data_download_pipeline import main_download_pipeline
 from src.data_extraction.data_extraction_pipeline import main_extraction_pipeline
 from src.model_creation.model_creation_pipeline import main_model_creation_pipeline
 from src.model_inference.model_inference_pipeline import main_inference_pipeline
-
+from src.model_evaluation.model_evaluation_pipeline import main_model_evaluation_pipeline
 def load_config(config_file: str = "pipeline_config.yaml") -> Dict[str, Any]:
     """Load configuration from YAML file."""
     try:
@@ -87,6 +87,21 @@ def run_model_inference(exp_name: str, processed_dataset_name: str, model_name: 
         return True
     except subprocess.CalledProcessError as e:
         print(f"❌ Model Inference Pipeline failed with exit code {e.returncode}")
+        return False
+
+def run_model_evaluation(exp_name: str, processed_dataset_name: str, model_name: str) -> bool:
+    """Run model evaluation pipeline independently."""
+    print("🔄 Model Evaluation Pipeline")
+    print("----------------------------")
+    print("🤖 Starting model evaluation")
+    
+
+    try:
+        main_model_evaluation_pipeline(exp_name, processed_dataset_name, model_name)
+        print("✅ Model Evaluation Pipeline completed successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Model Evaluation Pipeline failed with exit code {e.returncode}")
         return False
 
 
@@ -191,6 +206,7 @@ def show_usage():
     print("  --component extract   - Run only data extraction")
     print("  --component create    - Run only model creation")
     print("  --component inference - Run only model inference (interactive Q&A)")
+    print("  --component evaluation - Run only model evaluation")
     print()
     print("Options:")
     print("  --config <file>       - Path to config file (default: pipeline_config.yaml)")
@@ -202,6 +218,7 @@ def show_usage():
     print("  python3 run_pipeline.py --component extract   # Run only extraction")
     print("  python3 run_pipeline.py --component create    # Run only model creation")
     print("  python3 run_pipeline.py --component inference # Run only inference")
+    print("  python3 run_pipeline.py --component evaluation # Run only evaluation")
     print("  python3 run_pipeline.py --config my_config.yaml  # Use custom config")
     print()
     print("For individual components, you can also run the pipeline scripts directly:")
@@ -209,6 +226,7 @@ def show_usage():
     print("  python3 src/data_extraction/data_extraction_pipeline.py --help")
     print("  python3 src/model_creation/model_creation_pipeline.py --help")
     print("  python3 src/model_inference/model_inference_pipeline.py --help")
+    print("  python3 src/model_evaluation/model_evaluation_pipeline.py --help")
 
 
 def main():
@@ -223,12 +241,13 @@ Examples:
   python3 run_pipeline.py --component extract   # Run only extraction
   python3 run_pipeline.py --component create    # Run only model creation
   python3 run_pipeline.py --component inference # Run only inference
+  python3 run_pipeline.py --component evaluation # Run only evaluation
         """
     )
     
     parser.add_argument(
         "--component", 
-        choices=["download", "extract", "create", "inference", "full"], 
+        choices=["download", "extract", "create", "inference", "evaluation", "full"], 
         default="full",
         help="Pipeline component to run (default: full)"
     )
@@ -268,6 +287,8 @@ Examples:
             success = run_model_creation(exp_name, processed_dataset_name, model_name)
         elif args.component == "inference":
             success = run_model_inference(exp_name, processed_dataset_name, model_name)
+        elif args.component == "evaluation":
+            success = run_model_evaluation(exp_name, processed_dataset_name, model_name)
         
         if success:
             print(f"✅ {args.component} component completed successfully")
