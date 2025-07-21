@@ -11,6 +11,7 @@ class LLMBase():
         self.vendor=vendor # model vendor
         self.model_name=model_name # model name
         self.API_key_string=API_key_string
+        self.vector_store_id=None
         # Get API key from environment
         self.set_API_key(API_key_string)
         #---------------------------
@@ -29,6 +30,10 @@ class LLMBase():
 
         return self._init_client()
     
+    def create_vector_database(self):
+
+        return self._create_vector_database()
+
     def query_model(self,query,instr_filename):
 
         return self._query_model(query,instr_filename)
@@ -54,21 +59,58 @@ class OpenAI_model(LLMBase):
             model_instr=f.read()
         return model_instr
     
+    def _create_vector_database(self,text_list):
+
+        self._create_vector_store()
+
+        self._upload_text_to_vector_store(text_list)
+
+    # vector store commands
+    # need to create a new vector store and delete it after use
+    def _create_vector_store(self):
+
+        # store created vector store path
+        vector_store = self.client.vector_stores.create(
+        name="knowledge_base"
+            )
+        self.vector_store_id=vector_store.id
+
+
+    def _upload_text_to_vector_store(self,text_list):
+
+        self.client.vector_stores.files.create(
+            vector_store_id=self.vector_store_id,
+            file=text_list
+        )
+
+    def _delete_vector_store(self):
+
+        self.client.vector_stores.delete(vector_store_id=self.vector_store_id)
+
+
     def _query_model(self,query,instr_filename):
 
         model_instr=self._set_instructions(instr_filename)
+
+        # Prepare input content
+        input_content = [{"type":"input_text", "text":query}]
+        
+        # Add vector store if provided
+        if self.vector_store_id is not None:
+            
+            input_content.append({
+                "type": "vector_store",
+                "vector_store_id": self.vector_store_id
+            })
 
         response= self.client.responses.create(
                     model=self.model_name,
                     instructions=model_instr,
                     input= [{
                             "role":"user",
-                            "content":[
-                                {"type":"input_text", "text":query},
-                    ],
+                            "content": input_content,
                     }],
                     
                     )
-
 
         return response.output_text

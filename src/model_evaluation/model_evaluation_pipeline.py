@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import logging
 from src.model_evaluation.classes import ModelEvaluation
-from datasets import Dataset
+
 import os
 from src.utils.config_loader import load_pipeline_config
 

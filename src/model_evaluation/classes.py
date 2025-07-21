@@ -4,7 +4,7 @@ from src.utils.config_loader import ConfigLoader,get_config_value
 import os
 import datetime
 from bertopic import BERTopic
-from datasets import load_from_disk
+from datasets import load_from_disk, Dataset
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -29,6 +29,7 @@ class ModelEvaluation:
         self.dataset_path=Path("data")/Path(exp_name)/Path("processed_data")/Path(processed_dataset_name)
         self.model_path=Path("models")/Path(exp_name)/Path(model_name)
 
+        
         self.eval_dataset_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_dataset.txt")
         #dataset_config_path=dataset_path/Path("data_extraction_config.yaml")
         #model_config_path=model_path/Path("model_creation_config.yaml")
@@ -187,6 +188,16 @@ class ModelEvaluation:
 
         return all_questions
 
+    def change_chunk_format(self, chunks: list[str]) -> list[str]:
+        """
+        Change the format of the chunks to be used for the LLM vector database.
+        """
+        modified_chunks=[]
+        for chunk in chunks:
+            modified_chunks.append({"content":chunk["text"]})
+
+        return modified_chunks
+
     def generate_eval_data(self)->None:
 
 
@@ -281,9 +292,17 @@ class ModelEvaluation:
 
         all_questions=self.generate_questions_from_topics(topics_for_questions, chunks_for_topics)
 
-        self.save_questions_to_file(all_questions)
+        llm_instance=create_LLM_instance(self.llm_API_key, [], self.llm_model_name, self.llm_vendor_name)
 
-    def save_questions_to_file(self, all_questions: list[str]) -> None:
+        # fetch processed database
+        processed_chunks=self.change_chunk_format(self.dataset)
+        llm_instance.create_vector_database(processed_chunks)
+
+        # save in Q/A format
+
+        self.save_questions_to_file(all_questions,llm_instance)
+
+    def save_questions_answers_to_file(self, all_questions: list[str], llm_instance) -> None:
         """
         Save all generated questions to a text file for evaluation.
         
@@ -299,9 +318,6 @@ class ModelEvaluation:
         Note:
             Creates the eval_data directory if it doesn't exist.
         """
-        # Create the eval_data directory if it doesn't exist
-        eval_data_dir = self.eval_dataset_path.parent
-        eval_data_dir.mkdir(parents=True, exist_ok=True)
         
         # Save questions to file
         with open(self.eval_dataset_path, 'w', encoding='utf-8') as f:
@@ -330,10 +346,14 @@ class ModelEvaluation:
             print(f"✅ Evaluation dataset already exists at: {self.eval_dataset_path}")
 
         # load questions from file
+        with open(self.eval_dataset_path, 'r', encoding='utf-8') as f:
+            questions=f.readlines()
+        
+        # generate answers from your RAG/RAG+SFT model
 
-        # generate answers from LLM using industry grade RAG
+        # compare answers with previously generated answers from GPT
 
-        # generate 
+        # save metrics using MLflow
         
         
         
