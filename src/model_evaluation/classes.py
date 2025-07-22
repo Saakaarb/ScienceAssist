@@ -1,5 +1,6 @@
 from pathlib import Path
-from src.utils.config_loader import ConfigLoader,get_config_value
+from src.utils.config_loader import ConfigLoader,get_config_value,load_pipeline_config
+from src.model_inference.classes import ModelInference
 import os
 import datetime
 from bertopic import BERTopic
@@ -32,14 +33,13 @@ class ModelEvaluation:
         self.model_path=Path("models")/Path(exp_name)/Path(model_name)
 
         
-        self.eval_dataset_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_dataset.txt")
-        self.eval_results_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_results.txt")
+        self.eval_dataset_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_dataset")
+        self.eval_results_path=Path("evaluations")/Path(exp_name)/Path(processed_dataset_name)/Path("eval_results")
         if not os.path.isdir(self.eval_dataset_path.parent.parent):
             os.makedirs(self.eval_dataset_path.parent.parent)
         if not os.path.isdir(self.eval_dataset_path.parent):
             os.makedirs(self.eval_dataset_path.parent)
-        if os.path.isfile(self.eval_dataset_path):
-            raise ValueError(f"Evaluation dataset already exists at {self.eval_dataset_path} and cannot be overwritten. Please delete it and run the evaluation pipeline again.")
+        
 
         #dataset_config_path=dataset_path/Path("data_extraction_config.yaml")
         #model_config_path=model_path/Path("model_creation_config.yaml")
@@ -50,6 +50,7 @@ class ModelEvaluation:
 
         self.dataset_config=self.dataset_config_loader.load_config("data_extraction")
         self.model_config=self.model_config_loader.load_config("model_creation")
+        self.inference_config=load_pipeline_config("model_inference")
 
         self.eval_config=config
         self.llm_API_key=get_config_value(self.eval_config, "api.API_key_string")
@@ -59,6 +60,7 @@ class ModelEvaluation:
         
         self.question_generation_instructions_file_path=Path("src/lib/LLM/LLM_instr_files/question_generation_instructions.txt")
         self.answer_generation_instructions_file_path=Path("src/lib/LLM/LLM_instr_files/answer_generation_instructions.txt")
+        self.judge_instructions_file_path=Path("src/lib/LLM/LLM_instr_files/judge_instructions.txt")
         # some settings
         self.num_top_topics_for_questions=get_config_value(self.eval_config, "dataset_generation.num_top_topics_for_questions")
         self.num_random_topics_for_questions=get_config_value(self.eval_config, "dataset_generation.num_random_topics_for_questions")
@@ -221,6 +223,8 @@ class ModelEvaluation:
 
     def generate_eval_data(self)->None:
 
+        if os.path.isdir(self.eval_dataset_path):
+            raise ValueError(f"Evaluation dataset already exists at {self.eval_dataset_path} and cannot be overwritten. Please delete it and run the evaluation pipeline again.")
 
         print("Generating evaluation data for given dataset")
         # loop to extract texts and clean them for topic analysis
@@ -235,9 +239,7 @@ class ModelEvaluation:
             all_text.append(text)  # Keep original text for reference
             all_cleaned_text.append(cleaned_text)  # Use cleaned text for topic analysis
 
-            #print(f"Original text: {text}")
-            #print(f"Cleaned text: {cleaned_text}")
-            #input("check")
+            
 
 
         print("Running BERTopic, this can take a while...")
@@ -352,76 +354,163 @@ class ModelEvaluation:
         """
         
         """
-        all_questions_with_chunks_and_answers=""
-
         
+        dataset=[]
         for i, question_string in tqdm(enumerate(all_questions),total=len(all_questions),desc="Generating answers for questions"):
-            combined_query = "Please answer the following question:\n\n"
+            current_dataset_entry={}
             current_question=all_questions[i]
-            current_chunks=chunks_for_all_questions[i]
-            combined_query += f"Question {i+1}:\n{current_question}\n\n"
-            combined_query += "Context: \n"
-            combined_query += "---"
-            for chunk in current_chunks:
-                combined_query += f"{chunk}\n\n"
-
+            current_dataset_entry["question"]=current_question
             
-            combined_query += "---"
+            current_chunks=chunks_for_all_questions[i]
+            current_dataset_entry["context"]=current_chunks
 
-            answer=llm_instance.query_model(combined_query, self.answer_generation_instructions_file_path)
-            combined_query+="Answer: \n\n"
-            combined_query += answer
+            answer=llm_instance.query_model(current_question, self.answer_generation_instructions_file_path)
+            current_dataset_entry["answer"]=answer
 
-            combined_query += "---"
-
-            all_questions_with_chunks_and_answers+=combined_query
-            all_questions_with_chunks_and_answers+="---\n\n\n"
+            dataset.append(current_dataset_entry)
         
-
         llm_instance.delete_vector_store()
 
-        # Save combined query to file
-        with open(self.eval_dataset_path, 'w', encoding='utf-8') as f:
-            f.write(f"# Combined Evaluation Query for {self.dataset_path.name}\n")
-            f.write(f"# Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"# Total questions combined: {len(all_questions)}\n")
-            f.write("=" * 80 + "\n\n")
-            f.write(all_questions_with_chunks_and_answers)
+        hf_dataset=Dataset.from_list(dataset)
+        hf_dataset.save_to_disk(self.eval_dataset_path)
         
         print(f"✅ Saved combined query with {len(all_questions)} questions to: {self.eval_dataset_path}")
+
+        return dataset
+
+
+    def query_created_model(self, dataset: Dataset) -> None:
+        """
+        Query the created RAG model using the ModelInference class.
+        
+        This function initializes the ModelInference class with the trained model
+        and uses it to generate answers for the provided questions.
+        
+        Args:
+            questions (list[str]): List of questions to answer
+            
+        Returns:
+            list[str]: List of answers generated by the RAG model
+        """
+        
+        # Construct paths for model inference
+        model_output_folder = self.model_path
+        path_to_dataset = self.dataset_path
         
         
 
+        LLM_vendor_name = get_config_value(self.inference_config, 'llm.LLM_vendor_name', 'openai')
+        LLM_model_name = get_config_value(self.inference_config, 'llm.LLM_model_name', 'gpt-4.1')
+        API_key_string = get_config_value(self.inference_config, 'api.API_key_string', 'OPENAI_API_KEY')
+        LLM_instr_filename = Path(get_config_value(self.inference_config, 'paths.LLM_instr_filename', 'src/lib/LLM/LLM_instr_files/RAG_instr.txt'))
 
-    # TODO: Init model inference
-    # TODO: Query model
-    # TODO: return answers to questions
+        num_chunks_to_retrieve=get_config_value(self.inference_config, 'retrieval.num_chunks_to_retrieve', 20)
+        num_cross_encoder_results=get_config_value(self.inference_config, 'retrieval.num_cross_encoder_results', 5)
+       
+        
+        # Initialize the ModelInference class
+        print("Initializing ModelInference...")
+        model_inference = ModelInference(
+            model_output_folder=model_output_folder,
+            model_name=LLM_model_name,  # This should be passed as parameter or from config
+            path_to_dataset=path_to_dataset,
+            LLM_vendor_name=LLM_vendor_name,
+            LLM_model_name=LLM_model_name,
+            LLM_instr_filename=LLM_instr_filename,
+            API_key_string=API_key_string
+        )
+        
 
-    def query_created_model(self,):
-        pass
 
-    def compare_answers(self,):
-        pass
+        # Generate answers for each question
+        dataset_with_answers = []
+        
+        for i, question in tqdm(enumerate(dataset["question"]),total=len(dataset["question"]),desc="Generating answers for questions"):
+            current_dataset_entry={}
+            current_dataset_entry["question"]=question
+            
+            
+            try:
+                answer = model_inference.query_model(
+                    question=question,
+                    num_embedding_results=num_chunks_to_retrieve,  # Number of chunks to retrieve initially
+                    num_cross_encoder_results=num_cross_encoder_results  # Number of chunks after reranking
+                )
+                current_dataset_entry["answer"]=answer
+                
+            except Exception as e:
+                print(f"Error processing question {i+1}: {e}")
+                current_dataset_entry["answer"]=f"Error: Could not generate answer for this question. {str(e)}"
+            dataset_with_answers.append(current_dataset_entry)
+        
+        print(f"✅ Generated answers for {len(dataset_with_answers)} questions")
+        return dataset_with_answers
+
+        
+    def compare_answers(self):
+        
+        answers_pred=load_from_disk(self.eval_results_path)
+        answers_true=load_from_disk(self.eval_dataset_path)
+
+        combined_string=""
+
+        for i,row in tqdm(answers_true):
+            question=row["question"]
+            answer_true=row["answer"]
+            answer_pred=answers_pred[i]["answer"]
+            if question != answer_pred["question"]:
+                print(f"❌ Question {i+1} is incorrect")
+                input("check")
+                continue
+            
+            combined_string+=f"Question: {question}\n"
+            combined_string+=f"True Answer: {answer_true}\n"
+            combined_string+=f"Answer from model: {answer_pred}\n"
+            combined_string+="\n"
+
+        # create an LLM judge for this
+        llm_instance=create_LLM_instance(self.llm_API_key, [], self.llm_model_name, self.llm_vendor_name)
+        judge_answer=llm_instance.query_model(combined_string, self.judge_instructions_file_path)
+        
+        scores=[float(x) for x in judge_answer.split(",")]
+        avg_score=sum(scores)/len(scores)
+
+        max_score=max(scores)
+        min_score=min(scores)
+        print(f"Scores: {scores}")
+        print(f"Average score: {sum(scores)/len(scores)}")
+        print(f"Median score: {sorted(scores)[len(scores)//2]}")
+        print(f"Max score: {max(scores)}")
+        print(f"Min score: {min(scores)}")
+        
+
+        return avg_score, max_score, min_score
 
     def evaluate_model(self):
         
         self.load_dataset()
 
         # If not present, generate it:
-        if not self.eval_dataset_path.exists():
+        if not os.path.isdir(self.eval_dataset_path):
             self.generate_eval_data()
         else:
             print(f"✅ Evaluation dataset already exists at: {self.eval_dataset_path}")
 
-        # load questions from file
-        with open(self.eval_dataset_path, 'r', encoding='utf-8') as f:
-            questions_context_and_answers=f.readlines()
+        dataset=load_from_disk(self.eval_dataset_path)
         
         # generate answers from your RAG/RAG+SFT model
+        dataset_with_answers=self.query_created_model(dataset)
+
+        # save dataset with answers
+        hf_dataset=Dataset.from_list(dataset_with_answers)
+        hf_dataset.save_to_disk(self.eval_results_path)
 
         # compare answers with previously generated answers from GPT
+        avg_score, max_score, min_score=self.compare_answers()
 
-        # save metrics using MLflow
+        return avg_score, max_score, min_score, self.dataset_config,self.model_config,self.inference_config
+
+        
         
         
         
