@@ -1,6 +1,14 @@
 # ScienceAssist 🚀
 
-An intelligent LLM-based research assistant that accelerates your research on technical topics by leveraging the latest research from arXiv. ScienceAssist automatically downloads, processes, and creates a knowledge base from scientific papers, enabling you to ask questions and get AI-powered answers based on the most recent research.
+An intelligent LLM-based research assistant that accelerates your research on technical topics by leveraging the latest research from arXiv. ScienceAssist automatically downloads, processes, and creates a knowledge base from scientific papers, enabling you to ask questions and get AI-powered answers based on the most recent research. It also had an automatic model evaluation pipeline, to test how different configuration settings affect the RAG pipeline outputs.
+
+# Why not use commercial APIs instead?
+
+1. **Limits on free-tier usage**: OpenAI's free tier allows for only upto 500 documents to be uploaded to a vector store, with limits on the size of documents. Instead, using a local RAG solution allows for unlimited documents while keeping critical documents on-premise. 
+
+2. **Full control over data pre-processing**: Having a custom RAG pipeline allows for full control over data pre-processing, chunking, embedding, indexing, re-ranking and storage.
+
+3. **Custom metadata storage and retrieval**: Commercial API like OpenAI Platform allow metadata storage upto a certain size; a custom RAG solution allows flexibility in metadata storage and retrieval. For eg. this framework not only retrieves chunk source document information, but even information like page number of the chunk.
 
 ## 🎯 Use Cases
 
@@ -9,7 +17,7 @@ An intelligent LLM-based research assistant that accelerates your research on te
 - **Technical Q&A**: Get answers based on the latest research
 - **Knowledge Discovery**: Explore connections between research papers
 - **Academic Writing**: Generate insights for papers and presentations
-
+- **Model Evaluation**: Systematically evaluate and compare different RAG configurations automatically
 
 ## 🌟 Features
 
@@ -18,16 +26,18 @@ An intelligent LLM-based research assistant that accelerates your research on te
 - **🧠 Vector Database Creation**: Builds FAISS vector databases for efficient document retrieval
 - **🔄 Cross-Encoder Reranking**: Uses advanced reranking to improve retrieval accuracy
 - **🤖 Interactive Q&A**: Ask questions and get AI-powered answers based on the research papers
+- **📊 Model Evaluation**: Automated evaluation pipeline to assess RAG system performance
 - **⚙️ Configurable Pipeline**: Easy-to-use YAML configuration for all parameters
 
 ## 🏗️ Architecture
 
-ScienceAssist consists of four main pipeline components:
+ScienceAssist consists of five main pipeline components:
 
 1. **Data Download Pipeline**: Searches arXiv and downloads relevant PDFs using a smart query method
 2. **Data Extraction Pipeline**: Extracts and processes text from PDFs based on user set-able parameters
 3. **Model Creation Pipeline**: Creates embedding models, cross-encoder models, and vector databases
 4. **Model Inference Pipeline**: Provides interactive Q&A with advanced reranking capabilities
+5. **Model Evaluation Pipeline**: Evaluates RAG system performance using automated question generation and scoring
 
 ## 🚀 Quick Start
 
@@ -104,6 +114,22 @@ This will:
 3. Create embedding models, cross-encoder models, and vector databases
 4. Start an interactive Q&A session with advanced reranking
 
+### Model Evaluation
+
+Evaluate your RAG model's performance using the automated evaluation pipeline:
+
+```bash
+python3 run_pipeline.py --component evaluation
+```
+
+This will:
+1. Generate evaluation questions from your dataset using topic modeling
+2. Create ground truth answers using LLM
+3. Test your RAG model on the evaluation questions
+4. Compare answers and provide performance metrics
+5. Log results to MLflow for experiment tracking
+
+The evaluation results are saved in the `evaluations/` directory and can be viewed using MLflow UI.
 
 ### Running the Created Model
 
@@ -131,6 +157,9 @@ python3 run_pipeline.py --component create
 
 # Start interactive Q&A session
 python3 run_pipeline.py --component inference
+
+# Evaluate model performance
+python3 run_pipeline.py --component evaluation
 ```
 This is useful if you would like to run a single part of the pipeline several times with different settings,
 to compare performance of different settings of the pipeline configuration in the final model.
@@ -140,6 +169,7 @@ Each sub-part of the pipeline has its own configuration file in the `config/` di
 - `data_extraction_config.yaml`
 - `model_creation_config.yaml`
 - `model_inference_config.yaml`
+- `model_evaluation_config.yaml`
 
 ### Custom Configuration
 
@@ -152,60 +182,3 @@ python3 run_pipeline.py --config my_custom_config.yaml
 ## 📁 Project Structure
 
 ```
-ScienceAssist/
-├── run_pipeline.py                    # Main pipeline runner
-├── pipeline_config.yaml               # Configuration file
-├── requirements.txt                   # Python dependencies
-├── .env                              # Environment variables (create this)
-├── src/
-│   ├── data_download/                # Data download pipeline
-│   ├── data_extraction/              # Data extraction pipeline
-│   ├── model_creation/               # Model creation pipeline
-│   ├── model_inference/              # Model inference pipeline
-│   └── utils/                        # Utility functions
-├── config/                           # Pipeline configurations
-├── data/                             # Downloaded and processed data
-├── models/                           # Created models and vector databases
-└── logs/                             # Pipeline logs
-```
-
-## 📊 Example Workflow
-
-1. **Configure your research topic**:
-   ```yaml
-   experiment:
-     exp_name: "machine_learning_research"
-     user_query: "deep learning transformer models"
-   ```
-
-2. **Run the full pipeline for model creation**:
-   ```bash
-   python3 run_pipeline.py
-   ```
-
-3. **Ask questions interactively**:
-   ```
-   🤖 ScienceAssist Interactive Q&A Session
-   ============================================
-   📊 Experiment: machine_learning_research
-   🧠 Model: ml_transformer_model
-   📚 Documents to retrieve: 5
-   🌡️  Temperature: 0.1
-   ============================================
-   💡 Type your questions below. Type 'quit', 'exit', or 'q' to end the session.
-   ============================================
-
-   ❓ Your question: What are the latest developments in transformer architecture?
-   ```
-
-Customize embedding models, LLM settings, and retrieval parameters in the respective config files.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-

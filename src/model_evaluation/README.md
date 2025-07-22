@@ -6,21 +6,6 @@ The Model Evaluation Pipeline is a comprehensive system for evaluating the perfo
 
 **NOTE**: This pipeline automatically generates intelligent evaluation questions to analyze the RAG pipeline on. While convenient, it is always best to have a few handcrafted examples as well to ensure correctness. Since this pipeline is expected to be used for expert-level analysis of different topics, we leave generation of hand-examples to the user. Further, since the pipeline used an LLM to evaluate the answers from RAG, there is some randomness in the generated results. One way around this is to run an ensemble of evaluations for the same evaluation set and consider mean scores.
 
-## Pipeline Architecture
-
-```markdown:src/model_evaluation/README.md
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Load Dataset  │───▶│ Generate Eval    │───▶│ Query Created   │───▶│ Compare Answers  │
-│                 │    │   Dataset        │    │   Model         │    │                 │
-└─────────────────┘    └──────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │                       │
-         ▼                       ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Topic Model   │    │   LLM Question   │    │   RAG Model     │    │   LLM Judge     │
-│   Analysis      │    │   Generation     │    │   Inference     │    │   Evaluation    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘    └─────────────────┘
-```
 
 ## Workflow Steps
 
