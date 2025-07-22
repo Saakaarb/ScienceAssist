@@ -125,6 +125,7 @@ Thumbs.db
 data/
 mlruns/
 models/
+evaluations/
 *.pdf
 *.csv
 *.idx

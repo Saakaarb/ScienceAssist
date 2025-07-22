@@ -454,11 +454,14 @@ class ModelEvaluation:
 
         combined_string=""
 
-        for i,row in tqdm(answers_true):
+        # Fix: Use enumerate to get index and row properly
+        for i, row in enumerate(tqdm(answers_true, desc="Comparing answers")):
             question=row["question"]
             answer_true=row["answer"]
             answer_pred=answers_pred[i]["answer"]
-            if question != answer_pred["question"]:
+            if question != answers_pred[i]["question"]:
+                print(f"Question: {question}")
+                print(f"Question: {answers_pred[i]['question']}")
                 print(f"❌ Question {i+1} is incorrect")
                 input("check")
                 continue
@@ -467,6 +470,8 @@ class ModelEvaluation:
             combined_string+=f"True Answer: {answer_true}\n"
             combined_string+=f"Answer from model: {answer_pred}\n"
             combined_string+="\n"
+
+        print(combined_string)
 
         # create an LLM judge for this
         llm_instance=create_LLM_instance(self.llm_API_key, [], self.llm_model_name, self.llm_vendor_name)
@@ -499,6 +504,7 @@ class ModelEvaluation:
         dataset=load_from_disk(self.eval_dataset_path)
         
         # generate answers from your RAG/RAG+SFT model
+
         dataset_with_answers=self.query_created_model(dataset)
 
         # save dataset with answers
