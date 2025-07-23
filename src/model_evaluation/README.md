@@ -4,7 +4,7 @@
 
 The Model Evaluation Pipeline is a comprehensive system for evaluating the performance of Retrieval-Augmented Generation (RAG) models. It generates evaluation datasets, compares model outputs against ground truth, and provides detailed metrics for model assessment.
 
-**NOTE**: This pipeline automatically generates intelligent evaluation questions to analyze the RAG pipeline on. While convenient, it is always best to have a few handcrafted examples as well to ensure correctness. Since this pipeline is expected to be used for expert-level analysis of different topics, we leave generation of hand-examples to the user. Further, since the pipeline used an LLM to evaluate the answers from RAG, there is some randomness in the generated results. One way around this is to run an ensemble of evaluations for the same evaluation set and consider mean scores.
+**NOTE**: This pipeline automatically generates intelligent evaluation questions to analyze the RAG pipeline on. While convenient, it is always best to have a few handcrafted examples as well to ensure correctness. Since this pipeline is expected to be used for expert-level analysis of different topics, generation of hand-crafted examples is left to the user. Further, since the pipeline used an LLM to evaluate the answers from RAG, there is some randomness in the generated evaluations. One way around this is to run an ensemble of evaluations for the same evaluation dataset and consider mean scores.
 
 
 ## Workflow Steps
