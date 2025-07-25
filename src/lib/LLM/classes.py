@@ -25,7 +25,7 @@ class LLMBase():
         
         self.API_key=os.getenv(API_key_string)
         if not self.API_key:
-            raise ValueError(f"API key not found in environment variable {API_key_string}") 
+            raise ValueError(f"API key not found in environment variable {API_key_string}. Is the .env file in the root directory?") 
 
     def init_client(self):
 

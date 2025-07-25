@@ -1,6 +1,6 @@
 # ScienceAssist 🚀
 
-An intelligent LLM-based research assistant that accelerates your research on technical topics by leveraging the latest research from arXiv. ScienceAssist automatically downloads, processes, and creates a knowledge base from scientific papers, enabling you to ask questions and get AI-powered answers based on the most recent research. It also had an automatic model evaluation pipeline, to test how different configuration settings affect the RAG pipeline outputs.
+An intelligent LLM-based research assistant that accelerates your research on technical topics by leveraging the latest research from arXiv. ScienceAssist automatically downloads, processes, and creates a knowledge base from scientific papers, enabling you to ask questions and get AI-powered answers based on the most recent research. It also has an automatic model evaluation pipeline, to test how different configuration settings affect the RAG pipeline outputs.
 
 # Why not use commercial APIs instead?
 
